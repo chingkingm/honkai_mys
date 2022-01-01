@@ -1,0 +1,186 @@
+import json
+import random
+import time
+import hashlib
+import requests
+import os
+import re
+
+from rich import print,print_json
+
+mhyVersion = '2.19.1'
+
+class Config(object):
+    @staticmethod
+    def load_config() -> dict:
+        with open(os.path.join(os.path.dirname(__file__),f"config.json")) as f:
+            CONFIG = json.load(f)
+            f.close()
+        return CONFIG
+
+    def __init__(self) -> None:
+        super().__init__()
+        con = Config.load_config()
+        self.cookies = con["cookies"]
+
+config = Config()
+COOKIES = config.cookies
+
+
+class MysApi(object):
+    """生成api"""
+    BASE = "https://api-takumi-record.mihoyo.com/game_record/app/honkai3rd/api"
+    API = {
+        "往事乐土": f"{BASE}/godWar?server={{serverid}}&role_id={{roleid}}",
+        "我的女武神": f"{BASE}/characters?server={{serverid}}&role_id={{roleid}}",
+        "数据总览": f"{BASE}/index?server={{serverid}}&role_id={{roleid}}",
+        "深渊战报_超弦空间": f"{BASE}/newAbyssReport?server={{serverid}}&role_id={{roleid}}",
+        "深渊战报_量子奇点": f"{BASE}/oldAbyssReport?server={{serverid}}&role_id={{roleid}}&abyss_type=1",
+        "深渊战报_迪拉克之海": f"{BASE}/oldAbyssReport?server={{serverid}}&role_id={{roleid}}&abyss_type=2",
+        "深渊战报_latest": f"{BASE}/latestOldAbyssReport?server={{serverid}}&role_id={{roleid}}",
+        "一周成绩单": f"{BASE}/weeklyReport?server={{serverid}}&role_id={{roleid}}",
+        "战场战报": f"{BASE}/battleFieldReport?server={{serverid}}&role_id={{roleid}}",
+        "常用工具": f"{BASE}/tools",
+        "获取自己角色": "https://api-takumi.mihoyo.com/binding/api/getUserGameRolesByCookie?game_biz=bh3_cn",
+        "获取他人角色": f"https://api-takumi-record.mihoyo.com/game_record/app/card/wapi/getGameRecordCard?uid={{mysuid}}"
+    }
+    
+    def __init__(self,server_id,role_id,*mysid) -> None:
+        super().__init__()
+        self.server = server_id
+        self.uid = role_id
+        if mysid:
+            try:
+                self.mid = str(int(mysid[0]))
+                self.getrole = self.generate("获取他人角色",self.mid)
+            except ValueError:
+                raise ValueError(f"{mysid[0]}\n米游社ID格式不对")
+        self.godWar = self.generate("往事乐土")
+        self.valkyrie = self.generate("我的女武神")
+        self.index = self.generate("数据总览")
+        self.newAbyss = self.generate("深渊战报_超弦空间")
+        self.oldAbyss_quantum = self.generate("深渊战报_量子奇点")
+        self.oldAbyss_dirac = self.generate("深渊战报_迪拉克之海")
+        self.oldAbyss_lastest = self.generate("深渊战报_latest")
+        self.weekly = self.generate("一周成绩单")
+        self.battleField = self.generate("战场战报")
+        self.getself = self.generate("获取自己角色")
+        self._for_iter = [self.godWar,self.valkyrie,self.index,self.newAbyss,self.oldAbyss_quantum,self.oldAbyss_dirac,self.oldAbyss_lastest,self.weekly,self.battleField]
+    def generate(self,typename:str,*ids) -> str:
+        url_origin = self.API[typename]
+        if len(ids) == 2:
+            sid = ids[0]
+            rid = ids[1]
+            mid = ""
+        elif len(ids) == 1:
+            sid = ""
+            rid = ""
+            mid = ids[0]
+        else:
+            sid = self.server
+            rid = self.uid
+            mid = ""
+        return url_origin.format(serverid=sid, roleid=rid, mysuid=mid)
+    def __iter__(self):
+        return iter(self._for_iter)
+
+
+class GetInfo(MysApi):
+    def __init__(self, server_id, role_id, *mysid) -> None:
+        super().__init__(server_id, role_id, *mysid)
+
+    @classmethod
+    def md5(cls,text):
+        md5 = hashlib.md5()
+        md5.update(text.encode())
+        return md5.hexdigest()
+    @classmethod
+    def DSGet(cls, q="", b=None):
+        if b:
+            br = json.dumps(b)
+        else:
+            br = ""
+        s = "xV8v4Qu54lUKrEYFZkJhB8cuOh9Asafs"
+        t = str(int(time.time()))
+        r = str(random.randint(100000, 200000))
+        c = cls.md5("salt=" + s + "&t=" + t + "&r=" + r + "&b=" + br + "&q=" + q)
+        return t + "," + r + "," + c
+
+    def all(self,api) -> dict:
+        """获取所有信息,接受传入MysApi对象,或[server_id,role_id]"""
+        if isinstance(api,MysApi):
+            info = {}
+            for url in api:
+                item,data = self.role_id(url)
+                if item in info:
+                    item += "_dirac"
+                info.update({item:data})
+            with open(os.path.join(os.path.dirname(__file__),f"./dist/all_in_one.json"),'w',encoding='utf8') as f:
+                json.dump(info,f,ensure_ascii=False,indent=4)
+                f.close()
+        pass
+
+    def role_id(self,url):
+        """通过游戏id查询，单项数据"""
+        try:
+            server, uid = [temp[1:] for temp in re.findall(r'=\w{2,}',url)]
+        except ValueError:
+            raise ValueError(f"{url}\napi格式不对")
+        item = re.search(r"/\w{1,}\?",url).group()[1:-1]
+        if item == "oldAbyssReport":
+            req = requests.options(
+                url=url,
+                headers={
+                    'DS': self.DSGet("role_id=" + uid + "&server=" + server),
+                    'x-rpc-app_version': mhyVersion,
+                    'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) miHoYoBBS/2.19.1',
+                    'x-rpc-client_type': '5',
+                    'Referer': 'https://webstatic.mihoyo.com/',
+                    "Cookie": COOKIES})
+        req = requests.get(
+            url=url,
+            headers={
+                'DS': self.DSGet("role_id=" + uid + "&server=" + server),
+                'x-rpc-app_version': mhyVersion,
+                'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) miHoYoBBS/2.11.1',
+                'x-rpc-client_type': '5',
+                'Referer': 'https://webstatic.mihoyo.com/',
+                "Cookie": COOKIES})
+        print(req.text)
+        data = json.loads(req.text)
+        with open(os.path.join(os.path.dirname(__file__),f"./dist/{item}.json"),'w',encoding='utf8') as f:
+            json.dump(data,f,indent=4,ensure_ascii=False)
+            f.close()
+        return item, data
+    def mys2role(self,url):
+        """通过米游社id查询游戏角色"""
+        try:
+            mid = re.search(r'\?\w{1,}=\d{1,}',url).group()[1:]
+        except ValueError:
+            raise ValueError(f"api格式不对")
+        item = re.search(r"/\w{1,}\?",url).group()[1:-1]
+        req = requests.get(
+            url=url,
+            headers={
+                'DS': self.DSGet(mid),
+                'x-rpc-app_version': mhyVersion,
+                'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) miHoYoBBS/2.11.1',
+                'x-rpc-client_type': '5',
+                'Referer': 'https://webstatic.mihoyo.com/',
+                "Cookie": COOKIES})
+        data = json.loads(req.text)
+        with open(os.path.join(os.path.dirname(__file__),f"./dist/{item}.json"),'w',encoding='utf8') as f:
+            json.dump(data,f,indent=4,ensure_ascii=False)
+            f.close()
+        for game in data["data"]["list"]:
+            if game["game_id"] == 1:
+                rid = game["game_role_id"]    # 游戏id
+                region = game["region"]   # 渠道代码
+                return rid, region
+        raise IndexError(f"该用户没有崩坏3角色.")   
+
+
+if __name__ == '__main__':
+    spider = GetInfo("android01","621711968")
+    spider.role_id(spider.oldAbyss_dirac)
+    
