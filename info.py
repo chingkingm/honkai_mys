@@ -2,13 +2,13 @@ import json
 import random
 import time
 import hashlib
+from typing import Tuple
 import requests
 import os
 import re
 
 from rich import print,print_json
 
-mhyVersion = '2.19.1'
 
 class Config(object):
     @staticmethod
@@ -28,7 +28,7 @@ COOKIES = config.cookies
 
 
 class MysApi(object):
-    """生成api"""
+    """用于生成api"""
     BASE = "https://api-takumi-record.mihoyo.com/game_record/app/honkai3rd/api"
     API = {
         "往事乐土": f"{BASE}/godWar?server={{serverid}}&role_id={{roleid}}",
@@ -45,16 +45,16 @@ class MysApi(object):
         "获取他人角色": f"https://api-takumi-record.mihoyo.com/game_record/app/card/wapi/getGameRecordCard?uid={{mysuid}}"
     }
     
-    def __init__(self,server_id,role_id,*mysid) -> None:
+    def __init__(self,server_id,role_id,mysid=None) -> None:
         super().__init__()
         self.server = server_id
         self.uid = role_id
-        if mysid:
+        if mysid is not None:
             try:
-                self.mid = str(int(mysid[0]))
+                self.mid = str(int(mysid))
                 self.getrole = self.generate("获取他人角色",self.mid)
             except ValueError:
-                raise ValueError(f"{mysid[0]}\n米游社ID格式不对")
+                raise ValueError(f"{mysid}\n米游社ID格式不对")
         self.godWar = self.generate("往事乐土")
         self.valkyrie = self.generate("我的女武神")
         self.index = self.generate("数据总览")
@@ -67,6 +67,7 @@ class MysApi(object):
         self.getself = self.generate("获取自己角色")
         self._for_iter = [self.godWar,self.valkyrie,self.index,self.newAbyss,self.oldAbyss_quantum,self.oldAbyss_dirac,self.oldAbyss_lastest,self.weekly,self.battleField]
     def generate(self,typename:str,*ids) -> str:
+        """typename:URL类型;ids:3种id"""
         url_origin = self.API[typename]
         if len(ids) == 2:
             sid = ids[0]
@@ -86,9 +87,17 @@ class MysApi(object):
 
 
 class GetInfo(MysApi):
-    def __init__(self, server_id, role_id, *mysid) -> None:
-        super().__init__(server_id, role_id, *mysid)
-
+    """继承自MysApi,用于获取信息"""
+    MHY_VERSION = '2.19.1'
+    def __init__(self, mysid:str=None, server_id:str=None, role_id:str=None) -> None:
+        """若传入mysid则server_id及role_id不生效."""
+        if mysid is not None:
+            try:
+                mid = str(int(mysid))
+            except ValueError:
+                raise f"{mysid}米游社id格式错误."
+            server_id, role_id = self.mys2role(self.generate("获取他人角色",mid))
+        super().__init__(server_id, role_id,mysid)
     @classmethod
     def md5(cls,text):
         md5 = hashlib.md5()
@@ -106,53 +115,47 @@ class GetInfo(MysApi):
         c = cls.md5("salt=" + s + "&t=" + t + "&r=" + r + "&b=" + br + "&q=" + q)
         return t + "," + r + "," + c
 
-    def all(self,api) -> dict:
-        """获取所有信息,接受传入MysApi对象,或[server_id,role_id]"""
+    def all(self,api:MysApi=None) -> dict:
+        """获取所有信息,接受传入MysApi对象"""
+        if api is None:
+            api = self
         if isinstance(api,MysApi):
             info = {}
             for url in api:
-                item,data = self.role_id(url)
+                item,data = self.fetch(url)
                 if item in info:
-                    item += "_dirac"
+                    item += "_dirac"    # 处理2种深渊数据覆盖问题
                 info.update({item:data})
             with open(os.path.join(os.path.dirname(__file__),f"./dist/all_in_one.json"),'w',encoding='utf8') as f:
                 json.dump(info,f,ensure_ascii=False,indent=4)
                 f.close()
-        pass
+            return info
 
-    def role_id(self,url):
-        """通过游戏id查询，单项数据"""
+    def fetch(self,url) -> Tuple[str, dict]:
+        """查询，单项数据"""
         try:
             server, uid = [temp[1:] for temp in re.findall(r'=\w{2,}',url)]
         except ValueError:
             raise ValueError(f"{url}\napi格式不对")
         item = re.search(r"/\w{1,}\?",url).group()[1:-1]
-        if item == "oldAbyssReport":
-            req = requests.options(
-                url=url,
-                headers={
-                    'DS': self.DSGet("role_id=" + uid + "&server=" + server),
-                    'x-rpc-app_version': mhyVersion,
-                    'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) miHoYoBBS/2.19.1',
-                    'x-rpc-client_type': '5',
-                    'Referer': 'https://webstatic.mihoyo.com/',
-                    "Cookie": COOKIES})
+        """高级区及以下的深渊查询api不可用,使用latest代替"""
         req = requests.get(
             url=url,
             headers={
                 'DS': self.DSGet("role_id=" + uid + "&server=" + server),
-                'x-rpc-app_version': mhyVersion,
+                'x-rpc-app_version': self.MHY_VERSION,
                 'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) miHoYoBBS/2.11.1',
                 'x-rpc-client_type': '5',
                 'Referer': 'https://webstatic.mihoyo.com/',
                 "Cookie": COOKIES})
-        print(req.text)
         data = json.loads(req.text)
         with open(os.path.join(os.path.dirname(__file__),f"./dist/{item}.json"),'w',encoding='utf8') as f:
             json.dump(data,f,indent=4,ensure_ascii=False)
             f.close()
         return item, data
-    def mys2role(self,url):
+    
+    @classmethod
+    def mys2role(cls,url) -> Tuple[str,str]:
         """通过米游社id查询游戏角色"""
         try:
             mid = re.search(r'\?\w{1,}=\d{1,}',url).group()[1:]
@@ -162,8 +165,8 @@ class GetInfo(MysApi):
         req = requests.get(
             url=url,
             headers={
-                'DS': self.DSGet(mid),
-                'x-rpc-app_version': mhyVersion,
+                'DS': cls.DSGet(mid),
+                'x-rpc-app_version': cls.MHY_VERSION,
                 'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) miHoYoBBS/2.11.1',
                 'x-rpc-client_type': '5',
                 'Referer': 'https://webstatic.mihoyo.com/',
@@ -176,11 +179,9 @@ class GetInfo(MysApi):
             if game["game_id"] == 1:
                 rid = game["game_role_id"]    # 游戏id
                 region = game["region"]   # 渠道代码
-                return rid, region
+                return region, rid
         raise IndexError(f"该用户没有崩坏3角色.")   
 
 
 if __name__ == '__main__':
-    spider = GetInfo("android01","621711968")
-    spider.role_id(spider.oldAbyss_dirac)
-    
+    spider = GetInfo(server_id='pc01',role_id='220622143')
