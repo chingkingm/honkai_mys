@@ -1,3 +1,8 @@
 # 崩坏3米游社查询
-## 在找到uid对应关系（game_id2mys_id或game_id2渠道id）之前，只能通过mysid查询
-## 可以在查询指令中指定服务器
+
+## 需要在查询指令中指定服务器
+
+## TODO
+- [ ] 存储uid及渠道,数据库.从而实现只需要指定一次渠道
+- [ ] cookie检测及切换cookie
+- [ ] 兼容egenshin的cookie

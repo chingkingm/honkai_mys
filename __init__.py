@@ -1,1 +1,1 @@
-from .info import MysApi, GetInfo
+from .info import GetInfo

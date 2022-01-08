@@ -149,6 +149,8 @@ class GetInfo(MysApi):
                 'Referer': 'https://webstatic.mihoyo.com/',
                 "Cookie": COOKIES})
         data = json.loads(req.text)
+        if item == "index":
+            data["data"]["role"].update({"id":uid}) # index添加role_id
         with open(os.path.join(os.path.dirname(__file__),f"./dist/{item}.json"),'w',encoding='utf8') as f:
             json.dump(data,f,indent=4,ensure_ascii=False)
             f.close()
@@ -184,4 +186,6 @@ class GetInfo(MysApi):
 
 
 if __name__ == '__main__':
-    spider = GetInfo(server_id='pc01',role_id='220622143')
+    spider = GetInfo(mysid="77149414")
+    # print(spider.newAbyss)
+    print_json(data=spider.fetch(spider.index))
