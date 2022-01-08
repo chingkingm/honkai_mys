@@ -186,6 +186,6 @@ class GetInfo(MysApi):
 
 
 if __name__ == '__main__':
-    spider = GetInfo(mysid="77149414")
+    spider = GetInfo(mysid="19846523")
     # print(spider.newAbyss)
-    print_json(data=spider.fetch(spider.index))
+    print_json(data=spider.fetch(spider.oldAbyss_lastest))
