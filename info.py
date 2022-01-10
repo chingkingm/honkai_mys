@@ -150,7 +150,7 @@ class GetInfo(MysApi):
                 "Cookie": COOKIES})
         data = json.loads(req.text)
         if item == "index":
-            data["data"]["role"].update({"id":uid}) # index添加role_id
+            data["data"]["role"].update({"role_id":uid}) # index添加role_id
         with open(os.path.join(os.path.dirname(__file__),f"./dist/{item}.json"),'w',encoding='utf8') as f:
             json.dump(data,f,indent=4,ensure_ascii=False)
             f.close()
@@ -181,11 +181,13 @@ class GetInfo(MysApi):
             if game["game_id"] == 1:
                 rid = game["game_role_id"]    # 游戏id
                 region = game["region"]   # 渠道代码
+                region_name = game["region_name"]
+                #todo 自动更新region.json
                 return region, rid
         raise IndexError(f"该用户没有崩坏3角色.")   
 
 
 if __name__ == '__main__':
-    spider = GetInfo(mysid="19846523")
-    # print(spider.newAbyss)
-    print_json(data=spider.fetch(spider.oldAbyss_lastest))
+    spider = GetInfo(mysid="75098978")
+    print(spider.fetch(spider.index))
+    
