@@ -117,10 +117,11 @@ class DrawIndex(Index):
         draw.text(xy=(1010,1305),text=str(self.stats.sss_armor_number),fill=(133,96,61),font=font_8548,anchor="mm")
         draw.text(xy=(1010,1420),text=str(self.stats.stigmata_number),fill=(133,96,61),font=font_8548,anchor="mm")
         # 往世乐土
-        draw.text(xy=(307,1645),text=str(self.stats.god_war_max_punish_level),fill=(133,96,61),font=font_8548,anchor="mm")
-        draw.text(xy=(809,1645),text=str(self.stats.god_war_max_challenge_level)+"层"+str(self.stats.god_war_max_challenge_score),fill=(133,96,61),font=font_8548,anchor="mm")
-        draw.text(xy=(307,1789),text=str(self.stats.god_war_max_level_avatar_number),fill=(133,96,61),font=font_8548,anchor="mm")
-        draw.text(xy=(809,1789),text=str(self.stats.god_war_extra_item_number),fill=(133,96,61),font=font_8548,anchor="mm")
+        if self.preference.is_god_war_unlock:
+            draw.text(xy=(307,1645),text=str(self.stats.god_war_max_punish_level),fill=(133,96,61),font=font_8548,anchor="mm")
+            draw.text(xy=(809,1645),text=str(self.stats.god_war_max_challenge_level)+"层"+str(self.stats.god_war_max_challenge_score),fill=(133,96,61),font=font_8548,anchor="mm")
+            draw.text(xy=(307,1789),text=str(self.stats.god_war_max_level_avatar_number),fill=(133,96,61),font=font_8548,anchor="mm")
+            draw.text(xy=(809,1789),text=str(self.stats.god_war_extra_item_number),fill=(133,96,61),font=font_8548,anchor="mm")
         # 舰长偏好
         data = [
             self.preference.battle_field,
