@@ -61,7 +61,7 @@ class ItemTrans(object):
         }
         return os.path.join(BASE,rating_png[rate])
 def draw_text_center(image:Image.Image,font:ImageFont.FreeTypeFont,height:int,color=(0,0,0),text="测翻一翻试"):
-    """居中写字"""
+    """unused!居中写字"""
     image_w,image_h = image.size
     text_size = font.getsize(text)
     draw = ImageDraw.Draw(image)
@@ -72,12 +72,12 @@ def draw_text_center(image:Image.Image,font:ImageFont.FreeTypeFont,height:int,co
 class DrawIndex(Index):
 
     def draw_card(self,weekr:WeeklyReport):
-        pass
         if self.preference.is_god_war_unlock:
             bg_path = os.path.join(os.path.dirname(__file__),f"assets/backgroud_godwar.png")
         else:
             bg_path = os.path.join(os.path.dirname(__file__),f"assets/backgroud_no_godwar.png")
         bg = Image.open(bg_path).convert("RGBA")
+        bg = myDraw.avatar(bg,avatar_url=self.role.AvatarUrl)
         favorite = Image.open(os.path.join(os.path.dirname(__file__),f"assets/backgroud_avatar/{weekr.favorite_character.large_background_path[-11:]}")).convert("RGBA")
         r,g,b,a = favorite.split()
         bg.paste(favorite,(782,367),mask=a)
@@ -143,10 +143,11 @@ class DrawIndex(Index):
 
 
         bg.show()
+        bg.close()
 
 
 if __name__ == '__main__':
-    with open(os.path.join(os.path.dirname(__file__),f"dist/index copy.json"),'r',encoding='utf8') as f:
+    with open(os.path.join(os.path.dirname(__file__),f"dist/index.json"),'r',encoding='utf8') as f:
         index = json.load(f)
         f.close()
     with open(os.path.join(os.path.dirname(__file__),f"dist/weeklyReport.json"),'r',encoding='utf8') as f:

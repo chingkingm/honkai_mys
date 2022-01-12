@@ -1,4 +1,5 @@
 import json
+import yaml
 import random
 import time
 import hashlib
@@ -13,8 +14,8 @@ from rich import print,print_json
 class Config(object):
     @staticmethod
     def load_config() -> dict:
-        with open(os.path.join(os.path.dirname(__file__),f"config.json")) as f:
-            CONFIG = json.load(f)
+        with open(os.path.join(os.path.dirname(__file__),f"config.yaml")) as f:
+            CONFIG = yaml.load(f,Loader=yaml.FullLoader)
             f.close()
         return CONFIG
 
@@ -22,11 +23,18 @@ class Config(object):
         super().__init__()
         con = Config.load_config()
         self.cookies = con["cookies"]
-
+    def get_cookie(self):
+        pass
+        
 config = Config()
-COOKIES = config.cookies
+COOKIES = config.cookies[0]
 
-
+class InfoError(Exception):
+    def __init__(self, *args: object) -> None:
+        super().__init__(*args)
+class MismatchError(InfoError):
+    def __init__(self, *args: object) -> None:
+        super().__init__(*args)
 class MysApi(object):
     """用于生成api"""
     BASE = "https://api-takumi-record.mihoyo.com/game_record/app/honkai3rd/api"
@@ -88,7 +96,7 @@ class MysApi(object):
 
 class GetInfo(MysApi):
     """继承自MysApi,用于获取信息"""
-    MHY_VERSION = '2.19.1'
+    MHY_VERSION = '2.11.1'
     def __init__(self, mysid:str=None, server_id:str=None, role_id:str=None) -> None:
         """若传入mysid则server_id及role_id不生效."""
         if mysid is not None:
@@ -149,6 +157,8 @@ class GetInfo(MysApi):
                 'Referer': 'https://webstatic.mihoyo.com/',
                 "Cookie": COOKIES})
         data = json.loads(req.text)
+        if data["retcode"] == 1008:
+            raise MismatchError("uid与服务器不匹配")
         if item == "index":
             data["data"]["role"].update({"role_id":uid}) # index添加role_id
         with open(os.path.join(os.path.dirname(__file__),f"./dist/{item}.json"),'w',encoding='utf8') as f:
@@ -188,6 +198,11 @@ class GetInfo(MysApi):
 
 
 if __name__ == '__main__':
-    spider = GetInfo(mysid="75098978")
-    print(spider.fetch(spider.index))
+    spider = GetInfo(server_id="ios01",role_id="31518889")
+    try:
+        _,data = spider.fetch(spider.index)
+        print(data)
+    except InfoError as e:
+        print(e)
+    
     
