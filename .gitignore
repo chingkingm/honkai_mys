@@ -153,3 +153,5 @@ cython_debug/
 .vscode
 config.json
 data
+example.db
+config.yaml

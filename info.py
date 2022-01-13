@@ -9,30 +9,14 @@ import os
 import re
 
 from rich import print,print_json
-
-
-class Config(object):
-    @staticmethod
-    def load_config() -> dict:
-        with open(os.path.join(os.path.dirname(__file__),f"config.yaml")) as f:
-            CONFIG = yaml.load(f,Loader=yaml.FullLoader)
-            f.close()
-        return CONFIG
-
-    def __init__(self) -> None:
-        super().__init__()
-        con = Config.load_config()
-        self.cookies = con["cookies"]
-    def get_cookie(self):
-        pass
-        
-config = Config()
-COOKIES = config.cookies[0]
-
+from .mytyping import COOKIES
 class InfoError(Exception):
     def __init__(self, *args: object) -> None:
         super().__init__(*args)
 class MismatchError(InfoError):
+    def __init__(self, *args: object) -> None:
+        super().__init__(*args)
+class FormatError(InfoError):
     def __init__(self, *args: object) -> None:
         super().__init__(*args)
 class MysApi(object):
@@ -103,7 +87,7 @@ class GetInfo(MysApi):
             try:
                 mid = str(int(mysid))
             except ValueError:
-                raise f"{mysid}米游社id格式错误."
+                raise FormatError(f"{mysid}米游社id格式错误.")
             server_id, role_id = self.mys2role(self.generate("获取他人角色",mid))
         super().__init__(server_id, role_id,mysid)
     @classmethod

@@ -1,11 +1,13 @@
 """生成图片"""
 import os
 import json
+import base64
 
 from rich import print,print_json
 from PIL import Image, ImageDraw, ImageFont
-from mytyping import Index,WeeklyReport
-from mypillow import myDraw
+from io import BytesIO
+from .mytyping import Index,WeeklyReport
+from .mypillow import myDraw
 class ItemTrans(object):
     """
     - 数字/字母 -> 文字
@@ -35,6 +37,7 @@ class ItemTrans(object):
     @staticmethod
     def server2id(no:str):
         """渠道名转渠道代码"""
+        no = no.lower()
         with open(os.path.join(os.path.dirname(__file__),f"region.json"),'r',encoding='utf8') as f:
             region = json.load(f)
             f.close()
@@ -85,15 +88,17 @@ class DrawIndex(Index):
         font_path_85 = os.path.join(os.path.dirname(__file__),f"assets/font/HYWenHei-85W.ttf")
         font_path_sara = os.path.join(os.path.dirname(__file__),f"assets/font/sarasa-ui-sc-semibold.ttf")   # hywh缺字
         font = ImageFont.truetype(font_path_sara,48)
+        font_6536 = ImageFont.truetype(font_path_65,size=36)
+        font_8548 = ImageFont.truetype(font_path_85,size=48)
+        font_6532 = ImageFont.truetype(font_path_65,size=32)
         # bg = draw_text_center(bg,font,height=560,text=self.role.nickname,color=(133,96,61))
         # draw = ImageDraw.Draw(bg)
         draw = myDraw(bg)
+        draw.text((1120,20),text=f'UID:{self.role.role_id}',fill='white',font=font_6536,anchor='rt')
         draw.text(xy=(562,562),text=self.role.nickname,fill=(0,0,0),font=font,anchor='mm')
-        font_8548 = ImageFont.truetype(font_path_85,size=48)
         draw.text(xy=(390,647),text=str(self.role.level),fill=(133,96,61),font=font_8548)
         draw.text(xy=(600,650),text=ItemTrans.id2server(self.role.region),fill=(133,96,61),font=font_8548)
-        font_6536 = ImageFont.truetype(font_path_65,size=36)
-        font_6532 = ImageFont.truetype(font_path_65,size=32)
+        
         # 深渊
         if self.stats.old_abyss is not None:
             draw.text(xy=(232,821),text="量子奇点",fill=(133,96,61),font=font_6536,anchor='mm')
@@ -140,10 +145,15 @@ class DrawIndex(Index):
         rating_image_path = ItemTrans.rate2png(self.preference.comprehensive_rating)
         rating_image = Image.open(rating_image_path).convert("RGBA")
         bg.paste(rating_image,box=(782,2300),mask=rating_image.split()[3])
+        # bg.show()
 
-
-        bg.show()
+        bio = BytesIO()
+        # data = bg.convert("RGB")
+        bg.save(bio, format="png", quality=80)
+        base64_str = base64.b64encode(bio.getvalue()).decode()
         bg.close()
+        return "base64://" + base64_str
+        bg.show()
 
 
 if __name__ == '__main__':

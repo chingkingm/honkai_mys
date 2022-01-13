@@ -1,7 +1,32 @@
 # pylint: disable=no-name-in-module
 # pylint: disable=no-self-argument
-from pydantic import BaseModel
-from typing import Optional
+import os
+import yaml
+ 
+from pydantic import BaseModel, main
+from typing import List, Optional
+
+class Config(BaseModel):
+    cookies:List[str]
+    is_egenshin:bool
+    egenshin_dir:str
+    cache_dir:str
+    @staticmethod
+    def load_config() -> dict:
+        with open(os.path.join(os.path.dirname(__file__),f"config.yaml"),mode='r',encoding='utf8') as f:
+            CONFIG = yaml.load(f,Loader=yaml.FullLoader)
+            f.close()
+        return CONFIG
+
+    # def __init__(self) -> None:
+    #     super().__init__()
+    #     con = Config.load_config()
+    #     self.cookies = con["cookies"]
+    # def get_cookie(self):
+    #     pass
+        
+config = Config(**Config.load_config())
+COOKIES = config.cookies[0]
 class _favorite_character(BaseModel):
     id:str
     name:str
@@ -62,3 +87,7 @@ class Index(BaseModel):
     role:_role
     stats:_stats
     preference:_preference
+
+if __name__ == '__main__':
+    con = Config(**Config.load_config())
+    print(con)
