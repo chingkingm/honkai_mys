@@ -5,10 +5,12 @@ import re
 import hoshino
 from hoshino import HoshinoBot, Service,MessageSegment
 from hoshino.typing import CQEvent
+from hoshino.util import DailyNumberLimiterInFile
 from .info import GetInfo, InfoError
 from .database import DB
 from .mytyping import Index,WeeklyReport
 from .info_card import DrawIndex,ItemTrans
+lmt = DailyNumberLimiterInFile('hkmys',999)
 sv = Service("崩坏3角色卡片",enable_on_default=False,visible=True)
 
 @sv.on_prefix("bh#")
@@ -45,17 +47,20 @@ async def bh3_player_card(bot:hoshino.HoshinoBot,ev:CQEvent):
             # region_db.set_region(role_id=role_id,region=region_id)
             await bot.send(ev,f'服务器信息与uid不匹配,可联系管理员修改.')
             return
-    spider = GetInfo(server_id=region_id,role_id=role_id if isinstance(role_id,str) else role_id.group())
+    role_id=role_id if isinstance(role_id,str) else role_id.group()
+    spider = GetInfo(server_id=region_id,role_id=role_id)
     try:
         _,ind = spider.fetch(spider.index)
     except InfoError as e:
-        await bot.send(ev,e)
+        await bot.send(ev,e.errorinfo)
         return
     region_db.set_region(role_id,region_id)
     qid_db.set_uid_by_qid(qid,role_id)
     _,wee = spider.fetch(spider.weekly)
     ind = DrawIndex(**ind['data'])
     wee = WeeklyReport(**wee['data'])
-    im = ind.draw_card(wee)
+    im = ind.draw_card(wee,qid)
     img = MessageSegment.image(im)
+    lmt.increase('111')
+    print(lmt.get_num('111'))
     await bot.send(ev,img)

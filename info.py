@@ -11,8 +11,11 @@ import re
 from rich import print,print_json
 from .mytyping import COOKIES
 class InfoError(Exception):
-    def __init__(self, *args: object) -> None:
-        super().__init__(*args)
+    def __init__(self, errorinfo) -> None:
+        super().__init__(errorinfo)
+        self.errorinfo = errorinfo
+    def __str__(self) -> str:
+        return self.errorinfo
 class MismatchError(InfoError):
     def __init__(self, *args: object) -> None:
         super().__init__(*args)
@@ -175,9 +178,9 @@ class GetInfo(MysApi):
 
 
 if __name__ == '__main__':
-    spider = GetInfo(server_id="ios01",role_id="31518889")
+    spider = GetInfo(mysid='83413188')
     try:
-        _,data = spider.fetch(spider.index)
+        _,data = spider.mys2role(spider.getrole)
         print(data)
     except InfoError as e:
         print(e)

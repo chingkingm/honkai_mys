@@ -74,16 +74,17 @@ def draw_text_center(image:Image.Image,font:ImageFont.FreeTypeFont,height:int,co
 
 class DrawIndex(Index):
 
-    def draw_card(self,weekr:WeeklyReport):
+    def draw_card(self,weekr:WeeklyReport,qid:str=None):
         if self.preference.is_god_war_unlock:
             bg_path = os.path.join(os.path.dirname(__file__),f"assets/backgroud_godwar.png")
         else:
             bg_path = os.path.join(os.path.dirname(__file__),f"assets/backgroud_no_godwar.png")
         bg = Image.open(bg_path).convert("RGBA")
-        bg = myDraw.avatar(bg,avatar_url=self.role.AvatarUrl)
-        favorite = Image.open(os.path.join(os.path.dirname(__file__),f"assets/backgroud_avatar/{weekr.favorite_character.large_background_path[-11:]}")).convert("RGBA")
-        r,g,b,a = favorite.split()
-        bg.paste(favorite,(782,367),mask=a)
+        bg = myDraw.avatar(bg,avatar_url=self.role.AvatarUrl,qid=qid)
+        if weekr.favorite_character is not None:
+            favorite = Image.open(os.path.join(os.path.dirname(__file__),f"assets/backgroud_avatar/{weekr.favorite_character.large_background_path[-11:]}")).convert("RGBA")
+            r,g,b,a = favorite.split()
+            bg.paste(favorite,(782,367),mask=a)
         font_path_65 = os.path.join(os.path.dirname(__file__),f"assets/font/HYWenHei-65W.ttf")
         font_path_85 = os.path.join(os.path.dirname(__file__),f"assets/font/HYWenHei-85W.ttf")
         font_path_sara = os.path.join(os.path.dirname(__file__),f"assets/font/sarasa-ui-sc-semibold.ttf")   # hywh缺字

@@ -13,7 +13,10 @@ class myDraw(ImageDraw.ImageDraw):
         _size = [(256,220),(256,256)]
         _box = [(435,155),(435,137)]
         if avatar_url is not None:
-            no = re.search(r'\d{3,}',avatar_url).group()
+            try:
+                no = re.search(r'\d{3,}',avatar_url).group()
+            except:
+                no = re.search(r"[a-zA-Z]{1,}\d{2}",avatar_url).group()
             a_url = avatar_url.split(no)[0] + no + '.png'
             flag = 0
         else:
