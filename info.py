@@ -16,6 +16,8 @@ class InfoError(Exception):
         self.errorinfo = errorinfo
     def __str__(self) -> str:
         return self.errorinfo
+    def __repr__(self) -> str:
+        return self.errorinfo
 class MismatchError(InfoError):
     def __init__(self, *args: object) -> None:
         super().__init__(*args)
@@ -178,11 +180,13 @@ class GetInfo(MysApi):
 
 
 if __name__ == '__main__':
-    spider = GetInfo(mysid='83413188')
-    try:
-        _,data = spider.mys2role(spider.getrole)
-        print(data)
-    except InfoError as e:
-        print(e)
+    # spider = GetInfo(mysid='145017802')
+    spider = GetInfo(server_id='yyb01',role_id='174897079')
+    print(InfoError('haiu'))
+    # try:
+    #     _,data = spider.fetch(spider.weekly)
+    #     print(data)
+    # except InfoError as e:
+    #     print(e)
     
     
