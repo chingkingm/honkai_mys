@@ -52,7 +52,7 @@ async def bh3_player_card(bot:hoshino.HoshinoBot,ev:CQEvent):
     try:
         _,ind = spider.fetch(spider.index)
     except InfoError as e:
-        await bot.send(ev,e)
+        await bot.send(ev,e.errorinfo)
         return
     region_db.set_region(role_id,region_id)
     qid_db.set_uid_by_qid(qid,role_id)

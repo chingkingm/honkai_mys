@@ -11,8 +11,11 @@ import re
 from rich import print,print_json
 from .mytyping import COOKIES
 class InfoError(Exception):
-    def __init__(self, *args: object) -> None:
-        super().__init__(*args)
+    def __init__(self, errorinfo) -> None:
+        super().__init__(errorinfo)
+        self.errorinfo = errorinfo
+    def __str__(self) -> str:
+        return self.errorinfo
 class MismatchError(InfoError):
     def __init__(self, *args: object) -> None:
         super().__init__(*args)
