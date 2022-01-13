@@ -175,9 +175,9 @@ class GetInfo(MysApi):
 
 
 if __name__ == '__main__':
-    spider = GetInfo(server_id="ios01",role_id="31518889")
+    spider = GetInfo(mysid='83413188')
     try:
-        _,data = spider.fetch(spider.index)
+        _,data = spider.mys2role(spider.getrole)
         print(data)
     except InfoError as e:
         print(e)

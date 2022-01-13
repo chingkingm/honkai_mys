@@ -59,7 +59,7 @@ async def bh3_player_card(bot:hoshino.HoshinoBot,ev:CQEvent):
     _,wee = spider.fetch(spider.weekly)
     ind = DrawIndex(**ind['data'])
     wee = WeeklyReport(**wee['data'])
-    im = ind.draw_card(wee)
+    im = ind.draw_card(wee,qid)
     img = MessageSegment.image(im)
     lmt.increase('111')
     print(lmt.get_num('111'))

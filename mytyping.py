@@ -4,7 +4,7 @@ import os
 import yaml
  
 from pydantic import BaseModel, main
-from typing import List, Optional
+from typing import List, Optional, Union
 
 class Config(BaseModel):
     cookies:List[str]
@@ -36,7 +36,7 @@ class _favorite_character(BaseModel):
     background_path:str
     large_background_path:str
 class WeeklyReport(BaseModel):
-    favorite_character:_favorite_character
+    favorite_character:Union[_favorite_character,None]
     gold_income:int
     gold_expenditure:int
     active_day_number:int
