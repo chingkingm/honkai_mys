@@ -118,9 +118,6 @@ class GetInfo(MysApi):
                 if item in info:
                     item += "_dirac"    # 处理2种深渊数据覆盖问题
                 info.update({item:data})
-            with open(os.path.join(os.path.dirname(__file__),f"./dist/all_in_one.json"),'w',encoding='utf8') as f:
-                json.dump(info,f,ensure_ascii=False,indent=4)
-                f.close()
             return info
 
     def fetch(self,url) -> Tuple[str, dict]:
@@ -141,13 +138,12 @@ class GetInfo(MysApi):
                 'Referer': 'https://webstatic.mihoyo.com/',
                 "Cookie": COOKIES})
         data = json.loads(req.text)
+
         if data["retcode"] == 1008:
             raise MismatchError("uid与服务器不匹配")
         if item == "index":
             data["data"]["role"].update({"role_id":uid}) # index添加role_id
-        with open(os.path.join(os.path.dirname(__file__),f"./dist/{item}.json"),'w',encoding='utf8') as f:
-            json.dump(data,f,indent=4,ensure_ascii=False)
-            f.close()
+
         return item, data
     
     @classmethod
@@ -168,9 +164,6 @@ class GetInfo(MysApi):
                 'Referer': 'https://webstatic.mihoyo.com/',
                 "Cookie": COOKIES})
         data = json.loads(req.text)
-        with open(os.path.join(os.path.dirname(__file__),f"./dist/{item}.json"),'w',encoding='utf8') as f:
-            json.dump(data,f,indent=4,ensure_ascii=False)
-            f.close()
         for game in data["data"]["list"]:
             if game["game_id"] == 1:
                 rid = game["game_role_id"]    # 游戏id
