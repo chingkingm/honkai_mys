@@ -122,7 +122,7 @@ class GetInfo(MysApi):
                 item,data = self.fetch(url)
                 if item in info:
                     item += "_dirac"    # 处理2种深渊数据覆盖问题
-                info.update({item:data})
+                info.update({item:data["data"]})
             return info
 
     def fetch(self,url) -> Tuple[str, dict]:
@@ -180,13 +180,15 @@ class GetInfo(MysApi):
 
 
 if __name__ == '__main__':
-    # spider = GetInfo(mysid='145017802')
-    spider = GetInfo(server_id='yyb01',role_id='174897079')
-    print(InfoError('haiu'))
-    # try:
-    #     _,data = spider.fetch(spider.weekly)
-    #     print(data)
-    # except InfoError as e:
-    #     print(e)
+    spider = GetInfo(mysid='19846523')
+    # spider = GetInfo(server_id='bb01',role_id='112854881')
     
+    try:
+        data = spider.all()
+        # print(data)
+    except InfoError as e:
+        print(e)
+    with open(os.path.join(os.path.dirname(__file__),f"dist/full.json"),'w',encoding='utf8') as f:
+        json.dump(data,f,indent=4,ensure_ascii=False)
+        f.close()
     
