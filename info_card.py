@@ -8,6 +8,7 @@ from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
 from .mytyping import Index,WeeklyReport
 from .mypillow import myDraw
+from .info import InfoError
 class ItemTrans(object):
     """
     - 数字/字母 -> 文字
@@ -38,13 +39,15 @@ class ItemTrans(object):
     def server2id(no:str):
         """渠道名转渠道代码"""
         no = no.lower()
+        if no.endswith("服"):
+            no = no[:-1]
         with open(os.path.join(os.path.dirname(__file__),f"region.json"),'r',encoding='utf8') as f:
             region = json.load(f)
             f.close()
         for server_id,alias in region.items():
-            if no in alias["alias"]:
+            if no in alias["alias"] or no == server_id:
                 return server_id
-        raise KeyError(f"找不到服务器{no}的数据")
+        raise InfoError(f"找不到渠道{no}的数据,可以尝试输入账号所在的服务器,如安卓3服")
     @staticmethod
     def id2server(region_id):
         """渠道代码转渠道名"""
