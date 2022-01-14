@@ -6,7 +6,7 @@ import base64
 from rich import print,print_json
 from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
-from .mytyping import Index,WeeklyReport
+from .mytyping import Index,WeeklyReport,FullInfo
 from .mypillow import myDraw
 from .info import InfoError
 class ItemTrans(object):
@@ -75,15 +75,16 @@ def draw_text_center(image:Image.Image,font:ImageFont.FreeTypeFont,height:int,co
     draw.text(text_condinate,text,fill=color,font=font)
     return image
 
-class DrawIndex(Index):
+class DrawIndex(FullInfo):
 
-    def draw_card(self,weekr:WeeklyReport,qid:str=None):
-        if self.preference.is_god_war_unlock:
+    def draw_card(self,qid:str=None):
+        weekr = self.weeklyReport
+        if self.index.preference.is_god_war_unlock:
             bg_path = os.path.join(os.path.dirname(__file__),f"assets/backgroud_godwar.png")
         else:
             bg_path = os.path.join(os.path.dirname(__file__),f"assets/backgroud_no_godwar.png")
         bg = Image.open(bg_path).convert("RGBA")
-        bg = myDraw.avatar(bg,avatar_url=self.role.AvatarUrl,qid=qid)
+        bg = myDraw.avatar(bg,avatar_url=self.index.role.AvatarUrl,qid=qid)
         if weekr.favorite_character is not None:
             favorite = Image.open(os.path.join(os.path.dirname(__file__),f"assets/backgroud_avatar/{weekr.favorite_character.large_background_path[-11:]}")).convert("RGBA")
             r,g,b,a = favorite.split()
@@ -95,58 +96,58 @@ class DrawIndex(Index):
         font_6536 = ImageFont.truetype(font_path_65,size=36)
         font_8548 = ImageFont.truetype(font_path_85,size=48)
         font_6532 = ImageFont.truetype(font_path_65,size=32)
-        # bg = draw_text_center(bg,font,height=560,text=self.role.nickname,color=(133,96,61))
+        # bg = draw_text_center(bg,font,height=560,text=self.index.role.nickname,color=(133,96,61))
         # draw = ImageDraw.Draw(bg)
         draw = myDraw(bg)
-        draw.text((1120,20),text=f'UID:{self.role.role_id}',fill='white',font=font_6536,anchor='rt')
-        draw.text(xy=(562,562),text=self.role.nickname,fill=(0,0,0),font=font,anchor='mm')
-        draw.text(xy=(390,647),text=str(self.role.level),fill=(133,96,61),font=font_8548)
-        draw.text(xy=(600,650),text=ItemTrans.id2server(self.role.region),fill=(133,96,61),font=font_8548)
+        draw.text((1120,20),text=f'UID:{self.index.role.role_id}',fill='white',font=font_6536,anchor='rt')
+        draw.text(xy=(562,562),text=self.index.role.nickname,fill=(0,0,0),font=font,anchor='mm')
+        draw.text(xy=(390,647),text=str(self.index.role.level),fill=(133,96,61),font=font_8548)
+        draw.text(xy=(600,650),text=ItemTrans.id2server(self.index.role.region),fill=(133,96,61),font=font_8548)
         
         # 深渊
-        if self.stats.old_abyss is not None:
+        if self.index.stats.old_abyss is not None:
             draw.text(xy=(232,821),text="量子奇点",fill=(133,96,61),font=font_6536,anchor='mm')
-            draw.text(xy=(232,885),text=ItemTrans.old_abyss(self.stats.old_abyss.level_of_quantum),fill=(133,96,61),font=font_6532,anchor='mm')
+            draw.text(xy=(232,885),text=ItemTrans.old_abyss(self.index.stats.old_abyss.level_of_quantum),fill=(133,96,61),font=font_6532,anchor='mm')
             draw.line(xy=[(310,790),(310,917)],fill=(161,154,129),width=0)
             draw.text(xy=(410,821),text="迪拉克之海",fill=(133,96,61),font=font_6536,anchor='mm')
-            draw.text(xy=(410,885),text=ItemTrans.old_abyss(self.stats.old_abyss.level_of_ow),fill=(133,96,61),font=font_6532,anchor='mm')
+            draw.text(xy=(410,885),text=ItemTrans.old_abyss(self.index.stats.old_abyss.level_of_ow),fill=(133,96,61),font=font_6532,anchor='mm')
         else:
             draw.text(xy=(310,821),text="超弦空间",fill=(133,96,61),font=font_6536,anchor="mm")
-            draw.text(xy=(232,885),text=ItemTrans.new_abyss(self.stats.new_abyss.level),fill=(133,96,61),font=font_8548,anchor='mm')
-            draw.text(xy=(410,885),text=f"{self.stats.new_abyss.cup_number}杯",fill=(133,96,61),font=font_6532,anchor='mm')
+            draw.text(xy=(232,885),text=ItemTrans.new_abyss(self.index.stats.new_abyss.level),fill=(133,96,61),font=font_8548,anchor='mm')
+            draw.text(xy=(410,885),text=f"{self.index.stats.new_abyss.cup_number}杯",fill=(133,96,61),font=font_6532,anchor='mm')
         # 战场
-        draw.text(xy=(790,821),text=ItemTrans.area(self.stats.battle_field_area),fill=(133,96,61),font=font_6536,anchor='mm')
-        draw.text(xy=(697,885),text=str(self.stats.battle_field_score),fill=(133,96,61),font=font_6536,anchor="mm")
-        draw.text(xy=(880,885),text=f"{self.stats.battle_field_ranking_percentage}%",fill=(133,96,61),font=font_8548,anchor="mm")
+        draw.text(xy=(790,821),text=ItemTrans.area(self.index.stats.battle_field_area),fill=(133,96,61),font=font_6536,anchor='mm')
+        draw.text(xy=(697,885),text=str(self.index.stats.battle_field_score),fill=(133,96,61),font=font_6536,anchor="mm")
+        draw.text(xy=(880,885),text=f"{self.index.stats.battle_field_ranking_percentage}%",fill=(133,96,61),font=font_8548,anchor="mm")
         # 数据总览
-        draw.text(xy=(465,1190),text=str(self.stats.active_day_number),fill=(133,96,61),font=font_8548,anchor="mm")
-        draw.text(xy=(465,1305),text=str(self.stats.armor_number),fill=(133,96,61),font=font_8548,anchor="mm")
-        draw.text(xy=(465,1420),text=str(self.stats.weapon_number),fill=(133,96,61),font=font_8548,anchor="mm")
-        draw.text(xy=(1010,1190),text=str(self.stats.suit_number),fill=(133,96,61),font=font_8548,anchor="mm")
-        draw.text(xy=(1010,1305),text=str(self.stats.sss_armor_number),fill=(133,96,61),font=font_8548,anchor="mm")
-        draw.text(xy=(1010,1420),text=str(self.stats.stigmata_number),fill=(133,96,61),font=font_8548,anchor="mm")
+        draw.text(xy=(465,1190),text=str(self.index.stats.active_day_number),fill=(133,96,61),font=font_8548,anchor="mm")
+        draw.text(xy=(465,1305),text=str(self.index.stats.armor_number),fill=(133,96,61),font=font_8548,anchor="mm")
+        draw.text(xy=(465,1420),text=str(self.index.stats.weapon_number),fill=(133,96,61),font=font_8548,anchor="mm")
+        draw.text(xy=(1010,1190),text=str(self.index.stats.suit_number),fill=(133,96,61),font=font_8548,anchor="mm")
+        draw.text(xy=(1010,1305),text=str(self.index.stats.sss_armor_number),fill=(133,96,61),font=font_8548,anchor="mm")
+        draw.text(xy=(1010,1420),text=str(self.index.stats.stigmata_number),fill=(133,96,61),font=font_8548,anchor="mm")
         # 往世乐土
-        if self.preference.is_god_war_unlock:
-            draw.text(xy=(307,1645),text=str(self.stats.god_war_max_punish_level),fill=(133,96,61),font=font_8548,anchor="mm")
-            draw.text(xy=(809,1645),text=str(self.stats.god_war_max_challenge_level)+"层"+str(self.stats.god_war_max_challenge_score),fill=(133,96,61),font=font_8548,anchor="mm")
-            draw.text(xy=(307,1789),text=str(self.stats.god_war_max_level_avatar_number),fill=(133,96,61),font=font_8548,anchor="mm")
-            draw.text(xy=(809,1789),text=str(self.stats.god_war_extra_item_number),fill=(133,96,61),font=font_8548,anchor="mm")
+        if self.index.preference.is_god_war_unlock:
+            draw.text(xy=(307,1645),text=str(self.index.stats.god_war_max_punish_level),fill=(133,96,61),font=font_8548,anchor="mm")
+            draw.text(xy=(809,1645),text=str(self.index.stats.god_war_max_challenge_level)+"层"+str(self.index.stats.god_war_max_challenge_score),fill=(133,96,61),font=font_8548,anchor="mm")
+            draw.text(xy=(307,1789),text=str(self.index.stats.god_war_max_level_avatar_number),fill=(133,96,61),font=font_8548,anchor="mm")
+            draw.text(xy=(809,1789),text=str(self.index.stats.god_war_extra_item_number),fill=(133,96,61),font=font_8548,anchor="mm")
         # 舰长偏好
         data = [
-            self.preference.battle_field,
-            self.preference.abyss,
-            self.preference.god_war,
-            self.preference.open_world,
-            self.preference.community,
-            self.preference.main_line,
+            self.index.preference.battle_field,
+            self.index.preference.abyss,
+            self.index.preference.god_war,
+            self.index.preference.open_world,
+            self.index.preference.community,
+            self.index.preference.main_line,
         ]
-        if self.preference.is_god_war_unlock:
+        if self.index.preference.is_god_war_unlock:
             draw.radar(data=data,center=(237,2246),radius=164)
         else:
             data.pop(2)
             draw.radar(data=data,center=(237,2246),radius=177)
-        draw.text(xy=(845,2176),text=str(self.preference.comprehensive_score),font=font_8548,fill=(133,96,61),anchor="mm")
-        rating_image_path = ItemTrans.rate2png(self.preference.comprehensive_rating)
+        draw.text(xy=(845,2176),text=str(self.index.preference.comprehensive_score),font=font_8548,fill=(133,96,61),anchor="mm")
+        rating_image_path = ItemTrans.rate2png(self.index.preference.comprehensive_rating)
         rating_image = Image.open(rating_image_path).convert("RGBA")
         bg.paste(rating_image,box=(782,2300),mask=rating_image.split()[3])
         # bg.show()
@@ -169,4 +170,4 @@ if __name__ == '__main__':
         f.close()
     di = DrawIndex(**index["data"])
     # print(di.json())
-    di.draw_card(WeeklyReport(**weekly["data"]))
+    di.draw_card(qid='1542292829')

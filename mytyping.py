@@ -224,7 +224,7 @@ class godWarAvatar(BaseModel):
     max_challenge_level: int
 
 
-class godWar(BaseModel):
+class _godWar(BaseModel):
     records: List[godWarRecord]
     collections: List[godWarCollection]
     summary: godWarSummary
@@ -265,7 +265,7 @@ class Character(BaseModel):
 class FullInfo(BaseModel):
     """all in one"""
 
-    godWar: godWar
+    godWar: _godWar
     characters: Character
     index: Index
     newAbyssReport: Optional[Abyss]
