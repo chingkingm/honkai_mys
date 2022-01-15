@@ -144,7 +144,7 @@ class AbyssReport(BaseModel):
     rank: Optional[int]
     settled_cup_number: Optional[int]
     cup_number: Optional[int]
-    elf: _elf
+    elf: Union[_elf,None]
     level: Union[int, str]
     settled_level: Optional[int]
     reward_type: Optional[str]
@@ -156,7 +156,7 @@ class Abyss(BaseModel):
 
 
 class BattleFieldInfo(BaseModel):
-    elf: _elf
+    elf: Union[_elf,None]
     lineup: List[_avatar]
     boss: _boss
     score: int
@@ -195,7 +195,7 @@ class godWarRecord(BaseModel):
     conditions: List[godWarCondition]
     main_avatar: _avatar
     support_avatars: List[_avatar]
-    elf: _elf
+    elf: Union[_elf,None]
     extra_item_icon: str
 
 

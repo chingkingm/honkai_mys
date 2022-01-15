@@ -143,9 +143,10 @@ class GetInfo(MysApi):
                 'Referer': 'https://webstatic.mihoyo.com/',
                 "Cookie": COOKIES})
         data = json.loads(req.text)
-
         if data["retcode"] == 1008:
             raise MismatchError("uid与服务器不匹配")
+        elif data["retcode"] == 10102:
+            raise InfoError(f"账号数据非公开,请前往米游社修改.")
         if item == "index":
             data["data"]["role"].update({"role_id":uid}) # index添加role_id
 
@@ -180,15 +181,15 @@ class GetInfo(MysApi):
 
 
 if __name__ == '__main__':
-    spider = GetInfo(mysid='19846523')
-    # spider = GetInfo(server_id='bb01',role_id='112854881')
+    # spider = GetInfo(mysid='19846523')
+    spider = GetInfo(server_id='bb01',role_id='123356755')
     
     try:
         data = spider.all()
         # print(data)
     except InfoError as e:
         print(e)
-    with open(os.path.join(os.path.dirname(__file__),f"dist/full.json"),'w',encoding='utf8') as f:
+    with open(os.path.join(os.path.dirname(__file__),f"dist/full123356755.json"),'w',encoding='utf8') as f:
         json.dump(data,f,indent=4,ensure_ascii=False)
         f.close()
     
