@@ -275,7 +275,7 @@ class DrawIndex(FullInfo):
             bg.alpha_composite(bfcard,dest=(39+355*n,3542))
         draw.text(xy=(562,3506),text=f"{ItemTrans.area(bfr.area)}\t{bfr.ranking_percentage}%\t{bfr.score:,}",fill=(133,96,61),font=font_6536,anchor='mm')
         draw.text(xy=(1110,3530),text=f"结算时间:{bfr.time_second.astimezone().date()}",fill="gray",font=font_6524,anchor='rb')
-        bg.show()
+        # bg.show()
 
         bio = BytesIO()
         # data = bg.convert("RGB")

@@ -50,15 +50,13 @@ async def bh3_player_card(bot:hoshino.HoshinoBot,ev:CQEvent):
     role_id=role_id if isinstance(role_id,str) else role_id.group()
     spider = GetInfo(server_id=region_id,role_id=role_id)
     try:
-        _,ind = spider.fetch(spider.index)
+        ind = spider.all()
     except InfoError as e:
         await bot.send(ev,e.errorinfo)
         return
     region_db.set_region(role_id,region_id)
     qid_db.set_uid_by_qid(qid,role_id)
-    _,wee = spider.fetch(spider.weekly)
-    ind = DrawIndex(**ind['data'])
-    wee = WeeklyReport(**wee['data'])
+    ind = DrawIndex(**ind)
     im = ind.draw_card(qid)
     img = MessageSegment.image(im)
     lmt.increase('111')
