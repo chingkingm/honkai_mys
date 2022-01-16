@@ -136,8 +136,8 @@ class _elf(BaseModel):
 
 class AbyssReport(BaseModel):
     score: int
-    update_time_second: Optional[datetime]
-    time_scond: Optional[datetime]
+    updated_time_second: Optional[datetime]
+    time_second: Optional[datetime]
     area: Optional[int]
     boss: _boss
     lineup: List[_avatar]
