@@ -39,7 +39,7 @@ async def bh3_player_card(bot:hoshino.HoshinoBot,ev:CQEvent):
     else:
         try:
             region_id = ItemTrans.server2id(region_name.group())
-        except KeyError as e:
+        except InfoError as e:
             await bot.send(ev,e)
             return
         now_region_id = region_db.get_region(role_id.group())
@@ -59,7 +59,7 @@ async def bh3_player_card(bot:hoshino.HoshinoBot,ev:CQEvent):
     _,wee = spider.fetch(spider.weekly)
     ind = DrawIndex(**ind['data'])
     wee = WeeklyReport(**wee['data'])
-    im = ind.draw_card(wee,qid)
+    im = ind.draw_card(qid)
     img = MessageSegment.image(im)
     lmt.increase('111')
     print(lmt.get_num('111'))
