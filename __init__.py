@@ -17,7 +17,7 @@ async def bh3_player_card(bot:HoshinoBot,ev:CQEvent):
     region_db = DB('uid.sqlite',tablename='uid_region')
     qid_db = DB("uid.sqlite",tablename='qid_uid')
     role_id = re.search(r"\d{1,}",msg)
-    region_name = re.search(r"\D{1,}\d",msg)
+    region_name = re.search(r"\D{1,}\d?",msg)
     if re.search(r"[mM][yY][sS]|米游社",msg):
         spider = GetInfo(mysid=role_id.group())
         region_id,role_id = spider.mys2role(spider.getrole)
