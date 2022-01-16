@@ -156,3 +156,8 @@ data
 example.db
 config.yaml
 test.py
+assets/AvatarCardFigures/*
+assets/AvatarCardIcons/*
+assets/AvatarIcon/*
+assets/ElfCardIcons/*
+assets/QuestBossIcon/*

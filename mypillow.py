@@ -30,12 +30,6 @@ class myDraw(ImageDraw.ImageDraw):
                 im.alpha_composite(pic,dest=(int(562-0.5*pic.width),int(267-0.5*pic.height)))
                 im.alpha_composite(bg)
                 return im
-    def endpoint(self,xy:Tuple[float,float]):
-        """端点"""
-        size = 3
-        x,y=xy
-        self.ellipse(xy=(x-size,y-size,x+size,y+size),fill="white",outline=(0,192,255))
-        pass
     def radar(self,data:List[float],center:Tuple[float,float],radius:float):
         """雷达图,求出各点坐标,调用ImageDraw.polygon"""
         origin_image = self._image

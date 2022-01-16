@@ -5,22 +5,19 @@ import re
 import hoshino
 from hoshino import HoshinoBot, Service,MessageSegment
 from hoshino.typing import CQEvent
-from hoshino.util import DailyNumberLimiterInFile
 from .info import GetInfo, InfoError
 from .database import DB
-from .mytyping import Index,WeeklyReport
 from .info_card import DrawIndex,ItemTrans
-lmt = DailyNumberLimiterInFile('hkmys',999)
 sv = Service("崩坏3角色卡片",enable_on_default=False,visible=True)
 
 @sv.on_prefix("bh#")
-async def bh3_player_card(bot:hoshino.HoshinoBot,ev:CQEvent):
+async def bh3_player_card(bot:HoshinoBot,ev:CQEvent):
     msg = ev.message.extract_plain_text().strip()
     qid = str(ev.user_id)
     region_db = DB('uid.sqlite',tablename='uid_region')
     qid_db = DB("uid.sqlite",tablename='qid_uid')
     role_id = re.search(r"\d{1,}",msg)
-    region_name = re.search(r"\D{1,}",msg)
+    region_name = re.search(r"\D{1,}\d",msg)
     if re.search(r"[mM][yY][sS]|米游社",msg):
         spider = GetInfo(mysid=role_id.group())
         region_id,role_id = spider.mys2role(spider.getrole)
@@ -40,11 +37,10 @@ async def bh3_player_card(bot:hoshino.HoshinoBot,ev:CQEvent):
         try:
             region_id = ItemTrans.server2id(region_name.group())
         except InfoError as e:
-            await bot.send(ev,e)
+            await bot.send(ev,str(e))
             return
         now_region_id = region_db.get_region(role_id.group())
-        if  now_region_id is not None and now_region_id!= region_id:
-            # region_db.set_region(role_id=role_id,region=region_id)
+        if  now_region_id is not None and now_region_id != region_id:
             await bot.send(ev,f'服务器信息与uid不匹配,可联系管理员修改.')
             return
     role_id=role_id if isinstance(role_id,str) else role_id.group()
@@ -52,13 +48,11 @@ async def bh3_player_card(bot:hoshino.HoshinoBot,ev:CQEvent):
     try:
         ind = spider.all()
     except InfoError as e:
-        await bot.send(ev,e.errorinfo)
+        await bot.send(ev,str(e))
         return
     region_db.set_region(role_id,region_id)
     qid_db.set_uid_by_qid(qid,role_id)
     ind = DrawIndex(**ind)
     im = ind.draw_card(qid)
     img = MessageSegment.image(im)
-    lmt.increase('111')
-    print(lmt.get_num('111'))
     await bot.send(ev,img)

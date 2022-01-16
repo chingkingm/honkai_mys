@@ -3,7 +3,6 @@ import os
 import json
 import base64
 
-from rich import print,print_json
 from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
 from operator import attrgetter
@@ -23,21 +22,6 @@ class ItemTrans(object):
             no = 0
         level = ["初级区","中级区","高级区","终极区"]
         return level[no-1]
-    @staticmethod
-    def new_abyss(no):
-        """超弦空间"""
-        level = ["禁忌","原罪Ⅰ","原罪Ⅱ","原罪Ⅲ","苦痛Ⅰ","苦痛Ⅱ","苦痛Ⅲ","红莲","寂灭"]
-        return level[no-1]
-    @staticmethod
-    def old_abyss(no):
-        """量子奇点&迪拉克之海"""
-        level = {
-            "A":"红莲",
-            "B":"苦痛",
-            "C":"原罪",
-            "D":"禁忌",
-        }
-        return level[no]
     @staticmethod
     def abyss_type(_type):
         if _type is None:
@@ -133,7 +117,7 @@ def draw_abyss(aby:AbyssReport):
                 ava_icon = dr.ImgResize(Image.open(dr._GetNetPic(val.icon_path)).convert("RGBA"),0.72)
                 temp.alpha_composite(ava_bg,dest=(45+n*120,108))
                 temp.alpha_composite(ava_icon,dest=(45+n*120,109))
-            temp.paste(im,mask=im.split()[3])
+            temp.alpha_composite(im)
             img_boss = dr.ImgResize(Image.open(dr._GetNetPic(aby.boss.avatar)),1.26)
             if aby.elf is not None:
                 img_elf = Image.open(dr._GetNetPic(aby.elf.avatar))
@@ -208,8 +192,8 @@ class DrawIndex(FullInfo):
         draw = myDraw(bg)
         draw.text((1120,20),text=f'UID:{self.index.role.role_id}',fill='white',font=font_6536,anchor='rt')
         draw.text(xy=(562,562),text=self.index.role.nickname,fill=(0,0,0),font=font,anchor='mm')
-        draw.text(xy=(390,647),text=str(self.index.role.level),fill=(133,96,61),font=font_8548)
-        draw.text(xy=(600,650),text=ItemTrans.id2server(self.index.role.region),fill=(133,96,61),font=font_8548)
+        draw.text(xy=(390,675),text=str(self.index.role.level),fill=(133,96,61),font=font_8548,anchor='lm')
+        draw.text(xy=(641,677),text=ItemTrans.id2server(self.index.role.region),fill=(133,96,61),font=font_8548,anchor='mm')
         
         # 深渊
         if self.index.stats.old_abyss is not None:

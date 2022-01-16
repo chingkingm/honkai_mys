@@ -1,5 +1,4 @@
 import json
-import yaml
 import random
 import time
 import hashlib
@@ -8,7 +7,6 @@ import requests
 import os
 import re
 
-from rich import print,print_json
 from .mytyping import COOKIES
 class InfoError(Exception):
     def __init__(self, errorinfo) -> None:
@@ -18,12 +16,6 @@ class InfoError(Exception):
         return self.errorinfo
     def __repr__(self) -> str:
         return self.errorinfo
-class MismatchError(InfoError):
-    def __init__(self, *args: object) -> None:
-        super().__init__(*args)
-class FormatError(InfoError):
-    def __init__(self, *args: object) -> None:
-        super().__init__(*args)
 class MysApi(object):
     """用于生成api"""
     BASE = "https://api-takumi-record.mihoyo.com/game_record/app/honkai3rd/api"
@@ -92,7 +84,7 @@ class GetInfo(MysApi):
             try:
                 mid = str(int(mysid))
             except ValueError:
-                raise FormatError(f"{mysid}米游社id格式错误.")
+                raise InfoError(f"{mysid}米游社id格式错误.")
             server_id, role_id = self.mys2role(self.generate("获取他人角色",mid))
         super().__init__(server_id, role_id,mysid)
     @classmethod
@@ -144,7 +136,7 @@ class GetInfo(MysApi):
                 "Cookie": COOKIES})
         data = json.loads(req.text)
         if data["retcode"] == 1008:
-            raise MismatchError("uid与服务器不匹配")
+            raise InfoError("uid与服务器不匹配")
         elif data["retcode"] == 10102:
             raise InfoError(f"账号数据非公开,请前往米游社修改.")
         if item == "index":
@@ -175,7 +167,6 @@ class GetInfo(MysApi):
                 rid = game["game_role_id"]    # 游戏id
                 region = game["region"]   # 渠道代码
                 region_name = game["region_name"]
-                #todo 自动更新region.json
                 return region, rid
         raise IndexError(f"该用户没有崩坏3角色.")   
 
