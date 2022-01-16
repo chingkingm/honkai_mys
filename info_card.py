@@ -69,7 +69,7 @@ class ItemTrans(object):
             region = json.load(f)
             f.close()
         for server_id,alias in region.items():
-            if no in alias["alias"] or no == server_id:
+            if no in alias["alias"] or no == alias["name"]:
                 return server_id
         raise InfoError(f"找不到渠道{no}的数据,可以尝试输入账号所在的服务器,如安卓3服")
     @staticmethod
