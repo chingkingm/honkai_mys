@@ -1,13 +1,16 @@
 # import sys
 # sys.path.append("G:\GenshinTools\HoshinoBot")
+import asyncio
 import re
 
 import hoshino
-from hoshino import HoshinoBot, Service,MessageSegment
+from hoshino import HoshinoBot, MessageSegment, Service
 from hoshino.typing import CQEvent
-from .info import GetInfo, InfoError
+
 from .database import DB
-from .info_card import DrawIndex,ItemTrans
+from .info import GetInfo, InfoError
+from .info_card import DrawIndex, ItemTrans
+
 sv = Service("崩坏3角色卡片",enable_on_default=False,visible=True)
 
 @sv.on_prefix("bh#")
@@ -53,6 +56,11 @@ async def bh3_player_card(bot:HoshinoBot,ev:CQEvent):
     region_db.set_region(role_id,region_id)
     qid_db.set_uid_by_qid(qid,role_id)
     ind = DrawIndex(**ind)
-    im = ind.draw_card(qid)
+    loop = asyncio.get_running_loop()
+    im = await loop.run_in_executor(
+        None,
+        ind.draw_card,
+        qid
+    )
     img = MessageSegment.image(im)
     await bot.send(ev,img)
