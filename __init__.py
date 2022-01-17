@@ -46,7 +46,7 @@ async def bh3_player_card(bot:HoshinoBot,ev:CQEvent):
     role_id=role_id if isinstance(role_id,str) else role_id.group()
     spider = GetInfo(server_id=region_id,role_id=role_id)
     try:
-        ind = spider.all()
+        ind = await spider.part()
     except InfoError as e:
         await bot.send(ev,str(e))
         return
