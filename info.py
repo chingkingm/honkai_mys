@@ -116,7 +116,21 @@ class GetInfo(MysApi):
                     item += "_dirac"    # 处理2种深渊数据覆盖问题
                 info.update({item:data["data"]})
             return info
-
+    
+    def part(self,api:MysApi=None):
+        """不查询角色,乐土等,以减少开销"""
+        if api is None:
+            api = self
+        info = {}
+        for url in api:
+            if "characters" in url or "godWar" in url:
+                continue
+            else:
+                item,data = self.fetch(url)
+                if item in info:
+                    item += "_dirac"    # 处理2种深渊数据覆盖问题
+                info.update({item:data["data"]})
+        return info
     def fetch(self,url) -> Tuple[str, dict]:
         """查询，单项数据"""
         try:
@@ -176,11 +190,10 @@ if __name__ == '__main__':
     spider = GetInfo(server_id='bb01',role_id='123356755')
     
     try:
-        data = spider.all()
+        data = spider.part()
         # print(data)
     except InfoError as e:
         print(e)
-    with open(os.path.join(os.path.dirname(__file__),f"dist/full123356755.json"),'w',encoding='utf8') as f:
+    with open(os.path.join(os.path.dirname(__file__),f"dist/full1.json"),'w',encoding='utf8') as f:
         json.dump(data,f,indent=4,ensure_ascii=False)
         f.close()
-    

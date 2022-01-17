@@ -265,8 +265,8 @@ class Character(BaseModel):
 class FullInfo(BaseModel):
     """all in one"""
 
-    godWar: _godWar
-    characters: Character
+    godWar: Optional[_godWar]
+    characters: Optional[Character]
     index: Index
     newAbyssReport: Optional[Abyss]
     latestOldAbyssReport: Optional[Abyss]
