@@ -57,10 +57,11 @@ async def bh3_player_card(bot:HoshinoBot,ev:CQEvent):
     qid_db.set_uid_by_qid(qid,role_id)
     ind = DrawIndex(**ind)
     loop = asyncio.get_running_loop()
-    im = await loop.run_in_executor(
-        None,
-        ind.draw_card,
-        qid
-    )
+    # im = await loop.run_in_executor(
+    #     None,
+    #     ind.draw_card,
+    #     qid
+    # )
+    im = await ind.draw_card(qid)
     img = MessageSegment.image(im)
     await bot.send(ev,img)
