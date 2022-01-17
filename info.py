@@ -1,13 +1,16 @@
+import hashlib
 import json
 import random
-import time
-import hashlib
-from typing import Tuple
-import requests
-import os
 import re
+import time
+from typing import Tuple
+
+import requests as narequests
+from hoshino import aiorequests as requests
 
 from .mytyping import COOKIES
+
+
 class InfoError(Exception):
     def __init__(self, errorinfo) -> None:
         super().__init__(errorinfo)
@@ -104,20 +107,20 @@ class GetInfo(MysApi):
         c = cls.md5("salt=" + s + "&t=" + t + "&r=" + r + "&b=" + br + "&q=" + q)
         return t + "," + r + "," + c
 
-    def all(self,api:MysApi=None) -> dict:
+    async def all(self,api:MysApi=None) -> dict:
         """获取所有信息,接受传入MysApi对象"""
         if api is None:
             api = self
         if isinstance(api,MysApi):
             info = {}
             for url in api:
-                item,data = self.fetch(url)
+                item,data = await self.fetch(url)
                 if item in info:
                     item += "_dirac"    # 处理2种深渊数据覆盖问题
                 info.update({item:data["data"]})
             return info
     
-    def part(self,api:MysApi=None):
+    async def part(self,api:MysApi=None):
         """不查询角色,乐土等,以减少开销"""
         if api is None:
             api = self
@@ -126,12 +129,12 @@ class GetInfo(MysApi):
             if "characters" in url or "godWar" in url:
                 continue
             else:
-                item,data = self.fetch(url)
+                item,data = await self.fetch(url)
                 if item in info:
                     item += "_dirac"    # 处理2种深渊数据覆盖问题
                 info.update({item:data["data"]})
         return info
-    def fetch(self,url) -> Tuple[str, dict]:
+    async def fetch(self,url) -> Tuple[str, dict]:
         """查询，单项数据"""
         try:
             server, uid = [temp[1:] for temp in re.findall(r'=\w{2,}',url)]
@@ -139,7 +142,7 @@ class GetInfo(MysApi):
             raise ValueError(f"{url}\napi格式不对")
         item = re.search(r"/\w{1,}\?",url).group()[1:-1]
         """高级区及以下的深渊查询api不可用,使用latest代替"""
-        req = requests.get(
+        req = await requests.get(
             url=url,
             headers={
                 'DS': self.DSGet("role_id=" + uid + "&server=" + server),
@@ -148,7 +151,7 @@ class GetInfo(MysApi):
                 'x-rpc-client_type': '5',
                 'Referer': 'https://webstatic.mihoyo.com/',
                 "Cookie": COOKIES})
-        data = json.loads(req.text)
+        data = json.loads(await req.text)
         if data["retcode"] == 1008:
             raise InfoError("uid与服务器不匹配")
         elif data["retcode"] == 10102:
@@ -166,7 +169,7 @@ class GetInfo(MysApi):
         except ValueError:
             raise ValueError(f"api格式不对")
         item = re.search(r"/\w{1,}\?",url).group()[1:-1]
-        req = requests.get(
+        req = narequests.get(
             url=url,
             headers={
                 'DS': cls.DSGet(mid),
@@ -186,14 +189,14 @@ class GetInfo(MysApi):
 
 
 if __name__ == '__main__':
-    # spider = GetInfo(mysid='19846523')
-    spider = GetInfo(server_id='bb01',role_id='123356755')
+    spider = GetInfo(mysid='19846523')
+    # spider = GetInfo(server_id='bb01',role_id='123356755')
     
-    try:
-        data = spider.part()
-        # print(data)
-    except InfoError as e:
-        print(e)
-    with open(os.path.join(os.path.dirname(__file__),f"dist/full1.json"),'w',encoding='utf8') as f:
-        json.dump(data,f,indent=4,ensure_ascii=False)
-        f.close()
+    # try:
+    #     data = asyncio.run(spider.part())
+    #     print(data)
+    # except InfoError as e:
+    #     print(e)
+    # with open(os.path.join(os.path.dirname(__file__),f"dist/full1.json"),'w',encoding='utf8') as f:
+    #     json.dump(data,f,indent=4,ensure_ascii=False)
+    #     f.close()
