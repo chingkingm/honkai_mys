@@ -11,7 +11,7 @@ from .database import DB
 from .info import GetInfo, InfoError
 from .info_card import DrawIndex, ItemTrans
 
-sv = Service("崩坏3角色卡片",enable_on_default=False,visible=True)
+sv = Service("崩坏3角色卡片",enable_on_default=True,visible=True)
 
 @sv.on_prefix("bh#")
 async def bh3_player_card(bot:HoshinoBot,ev:CQEvent):
@@ -29,7 +29,7 @@ async def bh3_player_card(bot:HoshinoBot,ev:CQEvent):
             role_id = qid_db.get_uid_by_qid(qid)
             region_id = region_db.get_region(role_id)
         except KeyError:
-            await bot.send(ev,"请在原有指令后面输入游戏uid,只需要输入一次就会记住下次直接使用{comm}获取就好\n例如:{comm}105293904".format(comm='bh#'))
+            await bot.send(ev,"请在原有指令后面输入游戏uid及服务器,只需要输入一次就会记住下次直接使用bh#获取就好\n例如:bh#100074751官服")
             return
     elif role_id is not None and region_name is None:
         region_id = region_db.get_region(role_id.group())
@@ -44,7 +44,7 @@ async def bh3_player_card(bot:HoshinoBot,ev:CQEvent):
             return
         now_region_id = region_db.get_region(role_id.group())
         if  now_region_id is not None and now_region_id != region_id:
-            await bot.send(ev,f'服务器信息与uid不匹配,可联系管理员修改.')
+            await bot.send(ev,f'服务器信息与uid不匹配,可联系管理员修改.')# 输入的服务器与数据库中保存的不一致，可手动delete该条数据
             return
     role_id=role_id if isinstance(role_id,str) else role_id.group()
     spider = GetInfo(server_id=region_id,role_id=role_id)
@@ -56,12 +56,6 @@ async def bh3_player_card(bot:HoshinoBot,ev:CQEvent):
     region_db.set_region(role_id,region_id)
     qid_db.set_uid_by_qid(qid,role_id)
     ind = DrawIndex(**ind)
-    loop = asyncio.get_running_loop()
-    # im = await loop.run_in_executor(
-    #     None,
-    #     ind.draw_card,
-    #     qid
-    # )
     im = await ind.draw_card(qid)
     img = MessageSegment.image(im)
     await bot.send(ev,img)
