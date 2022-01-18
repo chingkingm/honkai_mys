@@ -25,7 +25,9 @@ ps:每个uid只有首次查询的时候需要提供服务器.
 
 <details>
 <summary>示意图</summary>
-![im](./assets/example.png)
+
+![image](./assets/example.png)
+    
 </details>
 
 ## TODO
