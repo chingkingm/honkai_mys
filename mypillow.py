@@ -2,6 +2,7 @@ from io import BytesIO
 import requests
 import re
 import os
+from hoshino import aiorequests
 from typing import List,Tuple
 from PIL import ImageDraw,Image,ImageChops
 from math import sin,cos,pi
@@ -9,7 +10,7 @@ class myDraw(ImageDraw.ImageDraw):
     def __init__(self,im) -> None:
         super().__init__(im)
     @classmethod
-    def avatar(cls,bg:Image.Image,qid:str=None,avatar_url:str=None):
+    async def avatar(cls,bg:Image.Image,qid:str=None,avatar_url:str=None):
         """头像"""
         qava_url = "http://q1.qlogo.cn/g?b=qq&nk={qid}&s=140"
         if avatar_url is not None:
@@ -20,10 +21,10 @@ class myDraw(ImageDraw.ImageDraw):
             a_url = avatar_url.split(no)[0] + no + '.png'
         else:
             a_url = qava_url.format(qid=qid)
-        pic_data = cls._GetNetPic(url=a_url)
+        pic_data = await cls._GetNetPic(url=a_url)
         with Image.open(os.path.join(os.path.dirname(__file__),"assets/404.png")) as img_404:
             if ImageChops.difference(img_404,Image.open(pic_data)).getbbox() is None:
-                pic_data = cls._GetNetPic(url=qava_url.format(qid=qid))
+                pic_data = await cls._GetNetPic(url=qava_url.format(qid=qid))
         with Image.open(pic_data) as pic:
             pic = cls.ImgResize(pic,256/pic.width).convert("RGBA")
             with Image.new(mode="RGBA",size=bg.size,color="#ece5d8") as im:
@@ -54,9 +55,9 @@ class myDraw(ImageDraw.ImageDraw):
         # 粘贴到目标图片
         origin_image.alpha_composite(im)
     @staticmethod
-    def _GetNetPic(url:str):
+    async def _GetNetPic(url:str):
         if url.startswith("http://q1.qlogo.cn/"):
-            return BytesIO(requests.get(url).content)
+            return BytesIO(await aiorequests.get(url).content)
         image_type,img_name = url.split("/")[-2:]
         ASSETS_PATH = os.path.join(os.path.dirname(__file__),'assets')
         image_type_path = os.path.join(ASSETS_PATH,image_type)

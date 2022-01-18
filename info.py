@@ -3,6 +3,9 @@ import json
 import random
 import re
 import time
+import datetime
+import functools
+import inspect
 from typing import Tuple
 
 import requests as narequests
@@ -10,7 +13,34 @@ from hoshino import aiorequests as requests
 
 from .mytyping import COOKIES
 
+# cache from egenshin
+def cache(ttl=datetime.timedelta(hours=1), **kwargs):
+    def wrap(func):
+        cache_data = {}
 
+        @functools.wraps(func)
+        async def wrapped(*args, **kw):
+            nonlocal cache_data
+            bound = inspect.signature(func).bind(*args, **kw)
+            bound.apply_defaults()
+            ins_key = '|'.join(['%s_%s' % (k, v) for k, v in bound.arguments.items()])
+            default_data = {"time": None, "value": None}
+            data = cache_data.get(ins_key, default_data)
+
+            now = datetime.datetime.now()
+            if not data['time'] or now - data['time'] > ttl:
+                try:
+                    data['value'] = await func(*args, **kw)
+                    data['time'] = now
+                    cache_data[ins_key] = data
+                except Exception as e:
+                    raise e
+
+            return data['value']
+
+        return wrapped
+
+    return wrap
 class InfoError(Exception):
     def __init__(self, errorinfo) -> None:
         super().__init__(errorinfo)
@@ -134,6 +164,8 @@ class GetInfo(MysApi):
                     item += "_dirac"    # 处理2种深渊数据覆盖问题
                 info.update({item:data["data"]})
         return info
+
+    @cache(ttl=datetime.timedelta(minutes=10),arg_key='url')
     async def fetch(self,url) -> Tuple[str, dict]:
         """查询，单项数据"""
         try:
@@ -152,6 +184,7 @@ class GetInfo(MysApi):
                 'Referer': 'https://webstatic.mihoyo.com/',
                 "Cookie": COOKIES})
         data = json.loads(await req.text)
+        # print(data)
         if data["retcode"] == 1008:
             raise InfoError("uid与服务器不匹配")
         elif data["retcode"] == 10102:

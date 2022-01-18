@@ -108,19 +108,19 @@ def draw_text_center(image:Image.Image,font:ImageFont.FreeTypeFont,height:int,co
     text_condinate = int((image_w-text_size[0])/2),int(height-text_size[1]/2)
     draw.text(text_condinate,text,fill=color,font=font)
     return image
-def draw_abyss(aby:AbyssReport):
+async def draw_abyss(aby:AbyssReport):
     with Image.open(os.path.join(os.path.dirname(__file__),'assets/abyss.png')) as im:
         dr = myDraw(im)
         with Image.new(mode='RGBA',size=im.size) as temp:
             for n,val in enumerate(aby.lineup):
-                ava_bg = dr.ImgResize(Image.open(dr._GetNetPic(val.avatar_background_path)).convert("RGBA"),1.5) 
-                ava_icon = dr.ImgResize(Image.open(dr._GetNetPic(val.icon_path)).convert("RGBA"),0.72)
+                ava_bg = dr.ImgResize(Image.open(await dr._GetNetPic(val.avatar_background_path)).convert("RGBA"),1.5) 
+                ava_icon = dr.ImgResize(Image.open(await dr._GetNetPic(val.icon_path)).convert("RGBA"),0.72)
                 temp.alpha_composite(ava_bg,dest=(45+n*120,108))
                 temp.alpha_composite(ava_icon,dest=(45+n*120,109))
             temp.alpha_composite(im)
-            img_boss = dr.ImgResize(Image.open(dr._GetNetPic(aby.boss.avatar)),1.26)
+            img_boss = dr.ImgResize(Image.open(await dr._GetNetPic(aby.boss.avatar)),1.26)
             if aby.elf is not None:
-                img_elf = Image.open(dr._GetNetPic(aby.elf.avatar))
+                img_elf = Image.open(await dr._GetNetPic(aby.elf.avatar))
                 img_elf = dr.ImgResize(img_elf,coe=0.74)
                 img_elf_star = dr.ImgResize(Image.open(ItemTrans.star(aby.elf.star,1)),0.755)
                 temp.alpha_composite(img_elf,dest=(415,110))
@@ -146,20 +146,20 @@ def draw_abyss(aby:AbyssReport):
         dr.text((39,15),text=f"{ItemTrans.area(aby.area)}·{ItemTrans.abyss_level(abylevel)}·{ItemTrans.abyss_type(aby.type)}",fill='white',font=font_wh65)
         dr.text(xy=(680,90),text=f"结算时间:{timescond.astimezone().date()}",fill="#d4c18d",font=font_wh65,anchor='rb')
         return im
-def draw_battlefield(bfs:BattleFieldReport):
+async def draw_battlefield(bfs:BattleFieldReport):
     ret = []
     for bf in bfs.battle_infos:
         with Image.open(os.path.join(os.path.dirname(__file__),"assets/bf.png")) as bg:
             dr = myDraw(bg)
-            img_boss = Image.open(dr._GetNetPic(bf.boss.avatar))
+            img_boss = Image.open(await dr._GetNetPic(bf.boss.avatar))
             bg.alpha_composite(img_boss,dest=(42,0))
             for n,val in enumerate(bf.lineup):
-                img_val = dr.ImgResize(Image.open(dr._GetNetPic(val.background_path)),0.77)
+                img_val = dr.ImgResize(Image.open(await dr._GetNetPic(val.background_path)),0.77)
                 bg.alpha_composite(img_val,dest=(0,166+104*n))
                 img_star = dr.ImgResize(Image.open(ItemTrans.star(val.star)),0.455)
                 bg.alpha_composite(img_star,dest=(283,222+104*n))
             if bf.elf is not None:
-                img_elf = dr.ImgResize(Image.open(dr._GetNetPic(bf.elf.avatar)),0.562)
+                img_elf = dr.ImgResize(Image.open(await dr._GetNetPic(bf.elf.avatar)),0.562)
                 bg.alpha_composite(img_elf,dest=(124,485))
                 img_star = dr.ImgResize(Image.open(ItemTrans.star(bf.elf.star,1)),0.44)
                 bg.alpha_composite(img_star,dest=(195,523))
@@ -169,16 +169,16 @@ def draw_battlefield(bfs:BattleFieldReport):
     return ret
 class DrawIndex(FullInfo):
 
-    def draw_card(self,qid:str=None):
+    async def draw_card(self,qid:str=None):
         weekr = self.weeklyReport
         if self.index.preference.is_god_war_unlock:
             bg_path = os.path.join(os.path.dirname(__file__),f"assets/backgroud_godwar.png")
         else:
             bg_path = os.path.join(os.path.dirname(__file__),f"assets/backgroud_no_godwar.png")
         bg = Image.open(bg_path).convert("RGBA")
-        bg = myDraw.avatar(bg,avatar_url=self.index.role.AvatarUrl,qid=qid)
+        bg = await myDraw.avatar(bg,avatar_url=self.index.role.AvatarUrl,qid=qid)
         if weekr.favorite_character is not None:
-            img_fav = Image.open(myDraw._GetNetPic(weekr.favorite_character.large_background_path))
+            img_fav = Image.open(await myDraw._GetNetPic(weekr.favorite_character.large_background_path))
             bg.alpha_composite(img_fav,dest=(782,367))
         font_path_65 = os.path.join(os.path.dirname(__file__),f"assets/font/HYWenHei-65W.ttf")
         font_path_85 = os.path.join(os.path.dirname(__file__),f"assets/font/HYWenHei-85W.ttf")
@@ -249,13 +249,13 @@ class DrawIndex(FullInfo):
             abyss = self.latestOldAbyssReport
             abyss.reports.sort(key=attrgetter("time_second"),reverse=True)
         for n,reports in enumerate(abyss.reports):
-            abyss_card = draw_abyss(reports)
+            abyss_card = await draw_abyss(reports)
             bg.alpha_composite(abyss_card,dest=(48,2622+n*230))
             if n >= 2:
                 break
         # 战场战报
         bfr = self.battleFieldReport.reports[0]
-        ims = draw_battlefield(bfr)
+        ims = await draw_battlefield(bfr)
         for n,bfcard in enumerate(ims):
             bg.alpha_composite(bfcard,dest=(39+355*n,3542))
         draw.text(xy=(562,3506),text=f"{ItemTrans.area(bfr.area)}\t{bfr.ranking_percentage}%\t{bfr.score:,}",fill=(133,96,61),font=font_6536,anchor='mm')
