@@ -62,7 +62,7 @@ class ItemTrans(object):
     @staticmethod
     def server2id(no:str):
         """渠道名转渠道代码"""
-        no = no.lower()
+        no = no.lower().strip()
         if no.endswith("服"):
             no = no[:-1]
         with open(os.path.join(os.path.dirname(__file__),f"region.json"),'r',encoding='utf8') as f:
