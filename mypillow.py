@@ -31,9 +31,10 @@ class myDraw(ImageDraw.ImageDraw):
                 im.alpha_composite(pic,dest=(int(562-0.5*pic.width),int(267-0.5*pic.height)))
                 im.alpha_composite(bg)
                 return im
-    def radar(self,data:List[float],center:Tuple[float,float],radius:float):
+    @staticmethod
+    def radar(origin_image:Image.Image,data:List[float],center:Tuple[float,float],radius:float):
         """雷达图,求出各点坐标,调用ImageDraw.polygon"""
-        origin_image = self._image
+        # origin_image = bg
         # 新建工作图片
         im = Image.new("RGBA",size=origin_image.size,color=(255,255,255,0))
         dr = ImageDraw.Draw(im)
@@ -54,6 +55,7 @@ class myDraw(ImageDraw.ImageDraw):
             dr.ellipse(xy=(x-size,y-size,x+size,y+size),fill="white",outline=(0,192,255))
         # 粘贴到目标图片
         origin_image.alpha_composite(im)
+        return origin_image
     @staticmethod
     async def _GetNetPic(url:str):
         if url.startswith("http://q1.qlogo.cn/"):

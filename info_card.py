@@ -234,10 +234,11 @@ class DrawIndex(FullInfo):
             self.index.preference.main_line,
         ]
         if self.index.preference.is_god_war_unlock:
-            draw.radar(data=data,center=(237,2246),radius=164)
+            bg = draw.radar(bg,data=data,center=(237,2246),radius=164)
         else:
             data.pop(2)
-            draw.radar(data=data,center=(237,2246),radius=177)
+            bg = draw.radar(bg,data=data,center=(237,2246),radius=177)
+        draw = ImageDraw.Draw(bg)
         draw.text(xy=(845,2176),text=str(self.index.preference.comprehensive_score),font=font_8548,fill=(133,96,61),anchor="mm")
         rating_image_path = ItemTrans.rate2png(self.index.preference.comprehensive_rating)
         rating_image = Image.open(rating_image_path).convert("RGBA")
