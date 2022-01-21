@@ -6,9 +6,9 @@ import base64
 from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
 from operator import attrgetter
-from .mytyping import FullInfo,AbyssReport,BattleFieldReport
-from .mypillow import myDraw
-from .info import InfoError
+from hoshino.modules.honkai_mys.mytyping import FullInfo,AbyssReport,BattleFieldReport
+from hoshino.modules.honkai_mys.mypillow import myDraw
+from hoshino.modules.honkai_mys.info import InfoError
 class ItemTrans(object):
     """
     - 数字/字母 -> 文字
@@ -43,6 +43,8 @@ class ItemTrans(object):
     @staticmethod
     def abyss_level(no):
         """通用"""
+        if isinstance(no,str) and no.startswith("Unknown"):
+            return f"无数据"
         level = {
             1:"禁忌",
             2:"原罪Ⅰ",
@@ -209,8 +211,11 @@ class DrawIndex(FullInfo):
             draw.text(xy=(410,885),text=f"{self.index.stats.new_abyss.cup_number}杯",fill=(133,96,61),font=font_6532,anchor='mm')
         # 战场
         draw.text(xy=(790,821),text=ItemTrans.area(self.index.stats.battle_field_area),fill=(133,96,61),font=font_6536,anchor='mm')
-        draw.text(xy=(697,885),text=f'{self.index.stats.battle_field_score:,}',fill=(133,96,61),font=font_6536,anchor="mm")
-        draw.text(xy=(880,885),text=f"{self.index.stats.battle_field_ranking_percentage}%",fill=(133,96,61),font=font_8548,anchor="mm")
+        if self.index.stats.battle_field_score != 0:
+            draw.text(xy=(697,885),text=f'{self.index.stats.battle_field_score:,}',fill=(133,96,61),font=font_6536,anchor="mm")
+            draw.text(xy=(880,885),text=f"{self.index.stats.battle_field_ranking_percentage}%",fill=(133,96,61),font=font_8548,anchor="mm")
+        else:
+            draw.text(xy=(790,885),text="无数据",fill=(133,96,61),font=font_6532,anchor="mm")
         # 数据总览
         draw.text(xy=(465,1190),text=str(self.index.stats.active_day_number),fill=(133,96,61),font=font_8548,anchor="mm")
         draw.text(xy=(465,1305),text=str(self.index.stats.armor_number),fill=(133,96,61),font=font_8548,anchor="mm")
@@ -249,18 +254,23 @@ class DrawIndex(FullInfo):
         else:
             abyss = self.latestOldAbyssReport
             abyss.reports.sort(key=attrgetter("time_second"),reverse=True)
+        if len(abyss.reports) == 0:
+            bg.alpha_composite(Image.open(os.path.join(os.path.dirname(__file__),"assets/no-data.png")),dest=(379,2767))
         for n,reports in enumerate(abyss.reports):
             abyss_card = await draw_abyss(reports)
             bg.alpha_composite(abyss_card,dest=(48,2622+n*230))
             if n >= 2:
                 break
         # 战场战报
-        bfr = self.battleFieldReport.reports[0]
-        ims = await draw_battlefield(bfr)
-        for n,bfcard in enumerate(ims):
-            bg.alpha_composite(bfcard,dest=(39+355*n,3542))
-        draw.text(xy=(562,3506),text=f"{ItemTrans.area(bfr.area)}\t{bfr.ranking_percentage}%\t{bfr.score:,}",fill=(133,96,61),font=font_6536,anchor='mm')
-        draw.text(xy=(1110,3530),text=f"结算时间:{bfr.time_second.astimezone().date()}",fill="gray",font=font_6524,anchor='rb')
+        if self.battleFieldReport.reports != []:
+            bfr = self.battleFieldReport.reports[0]
+            ims = await draw_battlefield(bfr)
+            for n,bfcard in enumerate(ims):
+                bg.alpha_composite(bfcard,dest=(39+355*n,3542))
+            draw.text(xy=(562,3506),text=f"{ItemTrans.area(bfr.area)}\t{bfr.ranking_percentage}%\t{bfr.score:,}",fill=(133,96,61),font=font_6536,anchor='mm')
+            draw.text(xy=(1110,3530),text=f"结算时间:{bfr.time_second.astimezone().date()}",fill="gray",font=font_6524,anchor='rb')
+        else:
+            bg.alpha_composite(Image.open(os.path.join(os.path.dirname(__file__),"assets/no-data2.png")),dest=(398,3678))
         # bg.show()
 
         bio = BytesIO()
