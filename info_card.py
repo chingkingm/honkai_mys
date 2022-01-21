@@ -271,7 +271,7 @@ class DrawIndex(FullInfo):
             draw.text(xy=(1110,3530),text=f"结算时间:{bfr.time_second.astimezone().date()}",fill="gray",font=font_6524,anchor='rb')
         else:
             bg.alpha_composite(Image.open(os.path.join(os.path.dirname(__file__),"assets/no-data2.png")),dest=(398,3678))
-        bg.show()
+        # bg.show()
 
         bio = BytesIO()
         # data = bg.convert("RGB")
