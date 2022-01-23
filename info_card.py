@@ -286,7 +286,26 @@ def cal_dest(im:Image.Image,center:int):
     size = im.size
     return int(center - 0.5*size[0])
 class DrawCharacter(Character):
-
+    def draw_star(self,equip):
+        """画星星"""
+        num_total = equip.max_rarity
+        num_bright = equip.rarity
+        starlist = [1] * num_bright
+        num_dark = num_total - num_bright
+        starlist.extend([0] * num_dark)
+        star = Image.open(os.path.join(os.path.dirname(__file__),"assets/star/星.png"))
+        star_dark = Image.open(os.path.join(os.path.dirname(__file__),"assets/star/灰星.png"))
+        with Image.new(mode="RGBA",size=(216,62),color=(0,0,0,0)) as bg:
+            indent = 31
+            length = indent*num_total
+            x = int(0.5 * (bg.size[0] - length))
+            y = 14
+            for n,s in enumerate(starlist):
+                if s:
+                    bg.alpha_composite(star,dest=(x+indent*n,y))
+                else:
+                    bg.alpha_composite(star_dark,dest=(x+indent*n,y))
+            return bg
     async def draw_chara(self):
         row_number = math.ceil(len(self.characters)/3)
         card_chara = Image.new(mode="RGBA",size=(920,20+320*row_number),color=(236,229,216))
@@ -307,7 +326,7 @@ class DrawCharacter(Character):
                 blank.alpha_composite(bg_weapon,dest=(215,126))
                 img_weapon = Image.open(await md._GetNetPic(weapon.icon)).resize((72,63))
                 blank.alpha_composite(img_weapon,dest=(215,132))
-                img_star = md.ImgResize(Image.open(os.path.join(os.path.dirname(__file__),f"assets/star/m{weapon.max_rarity}-{weapon.rarity}.png")),height=27)
+                img_star = md.ImgResize(self.draw_star(weapon),height=27)
                 blank.alpha_composite(img_star,dest=(cal_dest(img_star,253),182))
                 for n,sti in enumerate(valkyrie.character.stigmatas):
                     if sti.id == 0:
@@ -318,7 +337,7 @@ class DrawCharacter(Character):
                         blank.alpha_composite(bg_sti,dest=(35+76*n,223))
                         img_sti = Image.open(await md._GetNetPic(sti.icon)).resize((75,65))
                         blank.alpha_composite(img_sti,dest=(35+76*n,228))
-                        img_star = md.ImgResize(Image.open(os.path.join(os.path.dirname(__file__),f"assets/star/m{sti.max_rarity}-{sti.rarity}.png")),height=29)
+                        img_star = md.ImgResize(self.draw_star(sti),height=29)
                         blank.alpha_composite(img_star,dest=(cal_dest(img_star,73+76*n),279))
                 font_lxj = ImageFont.truetype(os.path.join(os.path.dirname(__file__),"assets/font/HYLingXinTiJ.ttf"),size=26)
                 md.text(xy=(149,176),text=f"Lv.{valkyrie.character.avatar.level}",fill='black',font=font_lxj,anchor='mt')
@@ -326,6 +345,7 @@ class DrawCharacter(Character):
                 row = no % 3
                 card_chara.alpha_composite(blank,dest=(10+300*row,10+320*col))
                 blank.close()
+        # card_chara.show()
         return pic2b64(card_chara,100)
 
 if __name__ == '__main__':

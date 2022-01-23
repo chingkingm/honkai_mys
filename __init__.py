@@ -64,7 +64,7 @@ async def bh3_player_card(bot:HoshinoBot,ev:CQEvent):
     img = MessageSegment.image(im)
     await bot.send(ev,img)
 
-@sv.on_prefix("bhv")
+@sv.on_prefix("bhv#")
 async def bh3_chara_card(bot:HoshinoBot,ev:CQEvent):
     region_db = DB('uid.sqlite',tablename='uid_region')
     qid_db = DB("uid.sqlite",tablename='qid_uid')
