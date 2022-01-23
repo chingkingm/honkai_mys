@@ -5,7 +5,7 @@ from sys import path
 
 from typing import Optional
 from sqlitedict import SqliteDict
-from .mytyping import config
+from hoshino.modules.honkai_mys.mytyping import config
 class DB(SqliteDict):
     cahce_dir = os.path.join(os.path.dirname(__file__),config.cache_dir)
     def __init__(self, filename=None, tablename='unnamed', flag='c', autocommit=True, journal_mode="DELETE", encode=json.dumps, decode=json.loads):
@@ -30,3 +30,16 @@ class DB(SqliteDict):
         return self[qid]["role_id"]
     def set_uid_by_qid(self,qid:str,uid:str):
         self[qid] = {"role_id":uid}
+    def get_cookie(self,qid:str):
+        try:
+            cookie = self[qid]["cookie"]
+        except KeyError:
+            if config.is_egenshin:
+                edb = DB(config.egenshin_dir,tablename='unnamed')
+                try:
+                    cookie = edb.get(qid)["cookie"]
+                except TypeError:
+                    return None
+            else:
+                return None
+        return cookie
