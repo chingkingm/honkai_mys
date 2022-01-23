@@ -1,8 +1,10 @@
 # 用来存放数据库的文件夹
 cache_dir: ./data/
-# 是否使用egenshin的cookie,未实现
+# 是否使用egenshin的cookie,只有查询水晶手账时使用,
 is_egenshin: False
-# egenshin的文件夹,未实现,随便填
-egenshin_dir: /
+# egenshine的文件夹,填写绝对路径
+# 留空则默认为 somepath\hoshino\modules\egenshin
+egenshin_dir: 
+# 必填
 cookies:
   - your cookies

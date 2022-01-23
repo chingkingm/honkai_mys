@@ -2,11 +2,12 @@
 import os
 import json
 import base64
+import math
 
 from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
 from operator import attrgetter
-from hoshino.modules.honkai_mys.mytyping import FullInfo,AbyssReport,BattleFieldReport
+from hoshino.modules.honkai_mys.mytyping import FullInfo,AbyssReport,BattleFieldReport,Character
 from hoshino.modules.honkai_mys.mypillow import myDraw
 from hoshino.modules.honkai_mys.info import InfoError
 class ItemTrans(object):
@@ -110,12 +111,18 @@ def draw_text_center(image:Image.Image,font:ImageFont.FreeTypeFont,height:int,co
     text_condinate = int((image_w-text_size[0])/2),int(height-text_size[1]/2)
     draw.text(text_condinate,text,fill=color,font=font)
     return image
+def pic2b64(im:Image.Image,quality:int=100):
+    bio = BytesIO()
+    im.save(bio, format="png", quality=quality)
+    base64_str = base64.b64encode(bio.getvalue()).decode()
+    im.close()
+    return "base64://" + base64_str
 async def draw_abyss(aby:AbyssReport):
     with Image.open(os.path.join(os.path.dirname(__file__),'assets/abyss.png')) as im:
         dr = myDraw(im)
         with Image.new(mode='RGBA',size=im.size) as temp:
             for n,val in enumerate(aby.lineup):
-                ava_bg = dr.ImgResize(Image.open(await dr._GetNetPic(val.avatar_background_path)).convert("RGBA"),1.5) 
+                ava_bg = dr.ImgResize(Image.open(await dr._GetNetPic(val.avatar_background_path)).convert("RGBA"),1.5)
                 ava_icon = dr.ImgResize(Image.open(await dr._GetNetPic(val.icon_path)).convert("RGBA"),0.72)
                 temp.alpha_composite(ava_bg,dest=(45+n*120,108))
                 temp.alpha_composite(ava_icon,dest=(45+n*120,109))
@@ -273,13 +280,53 @@ class DrawIndex(FullInfo):
             bg.alpha_composite(Image.open(os.path.join(os.path.dirname(__file__),"assets/no-data2.png")),dest=(398,3678))
         # bg.show()
 
-        bio = BytesIO()
-        # data = bg.convert("RGB")
-        bg.save(bio, format="png", quality=100)
-        base64_str = base64.b64encode(bio.getvalue()).decode()
-        bg.close()
-        return "base64://" + base64_str
+        return pic2b64(bg,quality=100)
+def cal_dest(im:Image.Image,center:int):
+    """计算粘贴位置"""
+    size = im.size
+    return int(center - 0.5*size[0])
+class DrawCharacter(Character):
 
+    async def draw_chara(self):
+        row_number = math.ceil(len(self.characters)/3)
+        card_chara = Image.new(mode="RGBA",size=(920,20+320*row_number),color=(236,229,216))
+        for no,valkyrie in enumerate(self.characters):
+            with Image.open(os.path.join(os.path.dirname(__file__),"assets/chara.png")) as bg:
+                blank = Image.new(mode="RGBA",size=bg.size,color='white')
+                md = myDraw(blank)
+                img_backgroud = Image.open(await md._GetNetPic(valkyrie.character.avatar.avatar_background_path))
+                img_backgroud = img_backgroud.resize((190,153))
+                blank.alpha_composite(img_backgroud,dest=(46,15))
+                img_avatar = Image.open(await md._GetNetPic(valkyrie.character.avatar.half_length_icon_path)).resize((172,148))
+                blank.alpha_composite(img_avatar,dest=(61,19))
+                blank.alpha_composite(bg)
+                img_star = Image.open(ItemTrans.star(valkyrie.character.avatar.star)).resize((64,54))
+                blank.alpha_composite(img_star,dest=(48,148))
+                weapon = valkyrie.character.weapon
+                bg_weapon = Image.open(os.path.join(os.path.dirname(__file__),f"assets/equipment_{weapon.max_rarity}.png")).resize((75,75))
+                blank.alpha_composite(bg_weapon,dest=(215,126))
+                img_weapon = Image.open(await md._GetNetPic(weapon.icon)).resize((72,63))
+                blank.alpha_composite(img_weapon,dest=(215,132))
+                img_star = md.ImgResize(Image.open(os.path.join(os.path.dirname(__file__),f"assets/star/m{weapon.max_rarity}-{weapon.rarity}.png")),height=27)
+                blank.alpha_composite(img_star,dest=(cal_dest(img_star,253),182))
+                for n,sti in enumerate(valkyrie.character.stigmatas):
+                    if sti.id == 0:
+                        img_none = Image.open(os.path.join(os.path.dirname(__file__),"assets/equipment_0.png")).resize((75,75))
+                        blank.alpha_composite(img_none,dest=(35+76*n,223))
+                    else:
+                        bg_sti = Image.open(os.path.join(os.path.dirname(__file__),f"assets/equipment_{sti.max_rarity}.png")).resize((75,75))
+                        blank.alpha_composite(bg_sti,dest=(35+76*n,223))
+                        img_sti = Image.open(await md._GetNetPic(sti.icon)).resize((75,65))
+                        blank.alpha_composite(img_sti,dest=(35+76*n,228))
+                        img_star = md.ImgResize(Image.open(os.path.join(os.path.dirname(__file__),f"assets/star/m{sti.max_rarity}-{sti.rarity}.png")),height=29)
+                        blank.alpha_composite(img_star,dest=(cal_dest(img_star,73+76*n),279))
+                font_lxj = ImageFont.truetype(os.path.join(os.path.dirname(__file__),"assets/font/HYLingXinTiJ.ttf"),size=26)
+                md.text(xy=(149,176),text=f"Lv.{valkyrie.character.avatar.level}",fill='black',font=font_lxj,anchor='mt')
+                col = math.floor(no/3)
+                row = no % 3
+                card_chara.alpha_composite(blank,dest=(10+300*row,10+320*col))
+                blank.close()
+        return pic2b64(card_chara,100)
 
 if __name__ == '__main__':
     with open(os.path.join(os.path.dirname(__file__),f"dist/full.json"),'r',encoding='utf8') as f:

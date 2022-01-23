@@ -78,7 +78,13 @@ class myDraw(ImageDraw.ImageDraw):
             im.close()
         return BytesIO(data)
     @staticmethod
-    def ImgResize(im:Image.Image,coe:float):
+    def ImgResize(im:Image.Image,coe:float=None,weight:int=None,height:int=None):
         """等比例缩放"""
-        return im.resize((int(length * coe) for length in im.size) )
-    
+        if coe is not None:
+            return im.resize((int(length * coe) for length in im.size) )
+        elif weight is not None:
+            coe = weight/im.size[0]
+            return im.resize((int(weight),int(im.size[1]*coe)))
+        elif height is not None:
+            coe = height/im.size[1]
+            return im.resize((int(im.size[0]*coe),int(height)))
