@@ -311,7 +311,7 @@ class DrawCharacter(Character):
         card_chara = Image.new(mode="RGBA",size=(920,20+320*row_number),color=(236,229,216))
         for no,valkyrie in enumerate(self.characters):
             with Image.open(os.path.join(os.path.dirname(__file__),"assets/chara.png")) as bg:
-                blank = Image.new(mode="RGBA",size=bg.size,color='white')
+                blank = Image.new(mode="RGBA",size=bg.size,color=(236,229,216))
                 md = myDraw(blank)
                 img_backgroud = Image.open(await md._GetNetPic(valkyrie.character.avatar.avatar_background_path))
                 img_backgroud = img_backgroud.resize((190,153))
