@@ -3,7 +3,7 @@
 import os
 import yaml
 
-from datetime import datetime
+from datetime import datetime,date
 from pydantic import BaseModel
 from typing import List, Optional, Union
 
@@ -273,3 +273,49 @@ class FullInfo(BaseModel):
     weeklyReport: WeeklyReport
     battleFieldReport: BattleField
 
+# 手账部分
+class sourcepercent(BaseModel):
+    action_id:int
+    num:int
+    name:str
+    percent:int
+class LastMonthInfo(BaseModel):
+    group_by:List[sourcepercent]
+    month_star:int
+    month_hcoin:int
+    last_month_star:int
+    last_month_hcoin:int
+    star_rate:int
+    hcoin_rate:int
+    month_start:datetime
+    month_end:datetime
+    month:int
+    last_month:int
+    uid:str
+    month_level:int
+class findex(BaseModel):
+    uid:str
+    date:date
+    month:int
+    month_hcoin:int
+    month_star:int
+    month_level:int
+    day_hcoin:int
+    day_star:int
+    last_hcoin:int
+    last_star:int
+class finance_record(BaseModel):
+    action_id:int
+    time:datetime
+    add_num:int
+    action:str
+class FinanceRecord(BaseModel):
+    """水晶星石通用"""
+    page:int
+    month:int
+    list:List[finance_record]
+class FinanceInfo(BaseModel):
+    getLastMonthInfo:LastMonthInfo
+    index:findex
+    getHcoinRecords:FinanceRecord
+    getStarRecords:FinanceRecord

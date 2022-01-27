@@ -88,3 +88,49 @@ class myDraw(ImageDraw.ImageDraw):
         elif height is not None:
             coe = height/im.size[1]
             return im.resize((int(im.size[0]*coe),int(height)))
+    @staticmethod
+    def ring(data: Tuple[int], radius: int = 120):
+        """画环"""
+        imsize = 300
+        imsize_half = 0.5 * imsize
+        with Image.new("RGBA", size=[imsize, imsize]) as im:
+            dr = ImageDraw.Draw(im)
+            degree_start = -90
+            degree_radian = 0
+            colors = ["#969cf2", "#fc9208", "#57d9ad", "#ffe148"]
+            # 先画饼图
+            for n, d in enumerate(data):
+                dr.pieslice(
+                    [
+                        imsize_half - radius,
+                        imsize_half - radius,
+                        imsize_half + radius,
+                        imsize_half + radius,
+                    ],
+                    start=degree_start,
+                    end=degree_start + d * 3.6,
+                    fill=colors[n],
+                )
+                degree_start += d * 3.6
+                degree_radian = degree_radian + d / 100 * 2 * pi
+                dr.line(
+                    xy=[
+                        imsize_half,
+                        imsize_half,
+                        imsize_half + sin(degree_radian) * radius,
+                        imsize_half - cos(degree_radian) * radius,
+                    ],
+                    fill="white",
+                    width=2,
+                )  # 画分割线
+            # 用圆遮住中间,形成环
+            dr.ellipse(
+                xy=(
+                    imsize_half - 0.5 * radius,
+                    imsize_half - 0.5 * radius,
+                    imsize_half + 0.5 * radius,
+                    imsize_half + 0.5 * radius,
+                ),
+                fill="white",
+            )
+            return im

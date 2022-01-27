@@ -9,7 +9,7 @@ import datetime
 import functools
 import inspect
 from typing import Tuple
-
+import asyncio,os
 import requests
 from hoshino import aiorequests
 from hoshino.modules.honkai_mys.mytyping import config
@@ -194,7 +194,6 @@ class GetInfo(MysApi):
             server, uid = [temp[1:] for temp in re.findall(r'=[a-z0-9]{4,}',url)]
             headers=self.gen_header("role_id=" + uid + "&server=" + server,cookie)
             item = re.search(r"/\w{1,}\?",url).group()[1:-1]
-            item = item if "api-takumi" in url else f"finance_{item}"
         except ValueError:
             # raise ValueError(f"{url}\napi格式不对")
             headers = self.gen_header('',cookie)
@@ -215,7 +214,7 @@ class GetInfo(MysApi):
             raise InfoError("登录失效,请重新登录.")
         elif retcode == 0 or retcode == -1:
             # 0:正常获取;-1:等级与深渊不匹配
-            if item == "index":
+            if item == "index" and "api-takumi" in url:
                 data["data"]["role"].update({"role_id":uid}) # index添加role_id
             return item, data
         else:
@@ -292,11 +291,11 @@ if __name__ == '__main__':
     spider = Finance(qid="1542292829")
     # 1551044405
     # spider = GetInfo(server_id='bb01',role_id='112854881')
-    # try:
-    #     _,data = asyncio.run(spider.fetch(spider.valkyrie))
-    #     print(data)
-    # except InfoError as e:
-    #     print(e)
-    # with open(os.path.join(os.path.dirname(__file__),f"dist/chara_ch.json"),'w',encoding='utf8') as f:
-    #     json.dump(data,f,indent=4,ensure_ascii=False)
-    #     f.close()
+    try:
+        data = asyncio.run(spider.get_finance())
+        print(data)
+    except InfoError as e:
+        print(e)
+    with open(os.path.join(os.path.dirname(__file__),f"dist/financech.json"),'w',encoding='utf8') as f:
+        json.dump(data,f,indent=4,ensure_ascii=False)
+        f.close()
