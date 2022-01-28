@@ -10,7 +10,7 @@ from typing import List, Optional, Union
 class Config(BaseModel):
     cookies: List[str]
     is_egenshin: bool
-    egenshin_dir: str
+    egenshin_dir: Union[str,None]
     cache_dir: str
 
     @staticmethod

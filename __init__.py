@@ -5,6 +5,7 @@ import re
 
 import hoshino
 from hoshino import HoshinoBot, MessageSegment, Service
+from hoshino.modules.honkai_mys.util import NotBindError, support_private
 from hoshino.typing import CQEvent
 
 from hoshino.modules.honkai_mys.database import DB
@@ -87,14 +88,27 @@ async def bh3_chara_card(bot:HoshinoBot,ev:CQEvent):
     await bot.send(ev,img,at_sender=True)
     return
 
-@sv.on_fullmatch(("bhf","手账","水晶手账"))
+@support_private(sv)
+@sv.on_prefix(("bhf","手账","水晶手账"))
 async def show_finance(bot:HoshinoBot,ev:CQEvent):
     qid = ev.user_id
-    try:
-        spider = Finance(str(qid))
-    except InfoError as e:
-        await bot.send(ev,f"{e}")
+    msg = ev.message.extract_plain_text().strip()
+    if msg.startswith("绑定"):
+        try:
+            spider = Finance(qid=qid,cookieraw=msg[2:].strip())
+        except InfoError as e:
+            await bot.send(ev,str(e),at_sender=True)
+            return
+    elif "?" in msg or "？" in msg:
+        ret = NotBindError.msg2 if "2" in msg else NotBindError.msg
+        await bot.send(ev,ret,at_sender=True)
         return
+    else:
+        try:
+            spider = Finance(str(qid))
+        except InfoError as e:
+            await bot.send(ev,f"{e}",at_sender=True)
+            return
     fi = await spider.get_finance()
     fid = DrawFinance(**fi)
     im = fid.draw()
