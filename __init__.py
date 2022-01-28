@@ -5,11 +5,12 @@ import re
 
 import hoshino
 from hoshino import HoshinoBot, MessageSegment, Service
+from hoshino.modules.honkai_mys.util import NotBindError, support_private
 from hoshino.typing import CQEvent
 
 from hoshino.modules.honkai_mys.database import DB
-from hoshino.modules.honkai_mys.info import GetInfo, InfoError
-from hoshino.modules.honkai_mys.info_card import DrawIndex, ItemTrans, DrawCharacter
+from hoshino.modules.honkai_mys.info import GetInfo, InfoError, Finance
+from hoshino.modules.honkai_mys.info_card import DrawFinance, DrawIndex, ItemTrans, DrawCharacter
 
 sv = Service("崩坏3角色卡片",enable_on_default=True,visible=True)
 def handle_id(ev:CQEvent):
@@ -85,4 +86,31 @@ async def bh3_chara_card(bot:HoshinoBot,ev:CQEvent):
     im = await dr.draw_chara()
     img = MessageSegment.image(im)
     await bot.send(ev,img,at_sender=True)
+    return
+
+@support_private(sv)
+@sv.on_prefix(("bhf","手账","水晶手账"))
+async def show_finance(bot:HoshinoBot,ev:CQEvent):
+    qid = ev.user_id
+    msg = ev.message.extract_plain_text().strip()
+    if msg.startswith("绑定"):
+        try:
+            spider = Finance(qid=qid,cookieraw=msg[2:].strip())
+        except InfoError as e:
+            await bot.send(ev,str(e),at_sender=True)
+            return
+    elif "?" in msg or "？" in msg:
+        ret = NotBindError.msg2 if "2" in msg else NotBindError.msg
+        await bot.send(ev,ret,at_sender=True)
+        return
+    else:
+        try:
+            spider = Finance(str(qid))
+        except InfoError as e:
+            await bot.send(ev,f"{e}",at_sender=True)
+            return
+    fi = await spider.get_finance()
+    fid = DrawFinance(**fi)
+    im = fid.draw()
+    await bot.send(ev,f"{MessageSegment.image(im)}")
     return

@@ -35,11 +35,17 @@ class DB(SqliteDict):
             cookie = self[qid]["cookie"]
         except KeyError:
             if config.is_egenshin:
+                if config.egenshin_dir is None:
+                    config.egenshin_dir = os.path.join(os.path.dirname(__file__),"../egenshin/data/uid.sqlite")
                 edb = DB(config.egenshin_dir,tablename='unnamed')
                 try:
                     cookie = edb.get(qid)["cookie"]
-                except TypeError:
+                except:
                     return None
             else:
                 return None
         return cookie
+    def set_cookie(self,qid:str,cookie:str):
+        data = self.get(qid)
+        data.update({"cookie":cookie})
+        self[qid] = data

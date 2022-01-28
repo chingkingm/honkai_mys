@@ -1,49 +1,28 @@
+import asyncio
+import datetime
 import hashlib
-from http.cookies import SimpleCookie
 import json
-from operator import itemgetter
+import os
 import random
 import re
 import time
-import datetime
-import functools
-import inspect
+from http.cookies import SimpleCookie
+from operator import itemgetter
 from typing import Tuple
 
 import requests
 from hoshino import aiorequests
 from hoshino.modules.honkai_mys.mytyping import config
+
 COOKIES = config.cookies[0]
 from hoshino.modules.honkai_mys.database import DB
-# cache from egenshin
-def cache(ttl=datetime.timedelta(hours=1), **kwargs):
-    def wrap(func):
-        cache_data = {}
+from hoshino.modules.honkai_mys.util import NotBindError, cache
 
-        @functools.wraps(func)
-        async def wrapped(*args, **kw):
-            nonlocal cache_data
-            bound = inspect.signature(func).bind(*args, **kw)
-            bound.apply_defaults()
-            ins_key = '|'.join(['%s_%s' % (k, v) for k, v in bound.arguments.items()])
-            default_data = {"time": None, "value": None}
-            data = cache_data.get(ins_key, default_data)
 
-            now = datetime.datetime.now()
-            if not data['time'] or now - data['time'] > ttl:
-                try:
-                    data['value'] = await func(*args, **kw)
-                    data['time'] = now
-                    cache_data[ins_key] = data
-                except Exception as e:
-                    raise e
-
-            return data['value']
-
-        return wrapped
-
-    return wrap
 class InfoError(Exception):
+    notbind_msg = f"""
+    s
+    """
     def __init__(self, errorinfo) -> None:
         super().__init__(errorinfo)
         self.errorinfo = errorinfo
@@ -186,18 +165,18 @@ class GetInfo(MysApi):
             "Cookie": cookie
         }
         return headers
+    @staticmethod
     @cache(ttl=datetime.timedelta(minutes=10),arg_key='url')
-    async def fetch(self,url,cookie=None) -> Tuple[str, dict]:
+    async def fetch(url,cookie=None) -> Tuple[str, dict]:
         """查询，单项数据"""
         cookie = cookie if cookie is not None else COOKIES
         try:
             server, uid = [temp[1:] for temp in re.findall(r'=[a-z0-9]{4,}',url)]
-            headers=self.gen_header("role_id=" + uid + "&server=" + server,cookie)
+            headers=GetInfo.gen_header("role_id=" + uid + "&server=" + server,cookie)
             item = re.search(r"/\w{1,}\?",url).group()[1:-1]
-            item = item if "api-takumi" in url else f"finance_{item}"
         except ValueError:
             # raise ValueError(f"{url}\napi格式不对")
-            headers = self.gen_header('',cookie)
+            headers = GetInfo.gen_header('',cookie)
             item = url.split("/")[-1]
         """高级区及以下的深渊查询api不可用,使用latest代替"""
         req = await aiorequests.get(
@@ -215,7 +194,7 @@ class GetInfo(MysApi):
             raise InfoError("登录失效,请重新登录.")
         elif retcode == 0 or retcode == -1:
             # 0:正常获取;-1:等级与深渊不匹配
-            if item == "index":
+            if item == "index" and "api-takumi" in url:
                 data["data"]["role"].update({"role_id":uid}) # index添加role_id
             return item, data
         else:
@@ -246,7 +225,7 @@ class Finance(GetInfo):
         url= 'https://api-takumi.mihoyo.com/binding/api/getUserGameRolesByCookie'
         if not all:
             url = url + "?game_biz=bh3_cn"
-        resp = requests.get(url=url,headers=self.gen_header("",self.cookie))
+        resp = requests.get(url=url,headers=self.gen_header("",self.cookie.strip()))
         retcode = resp.json()["retcode"]
         if retcode != 0:
             raise InfoError(f"{resp.json()['message']}")
@@ -261,21 +240,27 @@ class Finance(GetInfo):
         role_id = data["game_uid"]
         FINANCE_CACHE.update({self.account_id:{"server_id":server_id,"role_id":role_id}})
         return server_id,role_id
-    def __init__(self,qid:str=None) -> None:
+    def __init__(self,qid:str,cookieraw:str=None) -> None:
         """初始化传入qid,调取数据库查找cookie."""
         self.db = DB("uid.sqlite","qid_uid")
-        cookie = self.db.get_cookie(qid)
-        if cookie is None:
-            raise InfoError("尚未绑定")
-        self.cookie = cookie
+        if cookieraw is not None:
+            cookietemp = SimpleCookie()
+            cookietemp.load(dict(zip(['account_id', 'cookie_token'],cookieraw.split(','))))
+            self.cookie = cookietemp.output(header='', sep=';').strip()
+        else:
+            cookie = self.db.get_cookie(qid)
+            if cookie is None:
+                raise InfoError(f"尚未绑定\n{NotBindError.msg}")
+            self.cookie = cookie
         self.account_id = SimpleCookie(self.cookie)["account_id"].value
         if self.account_id in FINANCE_CACHE:
             server_id = FINANCE_CACHE[self.account_id]["server_id"]
             role_id = FINANCE_CACHE[self.account_id]["role_id"]
         else:
             server_id,role_id = self.get_role()
+        if "cookie" not in locals():
+            self.db.set_cookie(qid,self.cookie)
         super().__init__(server_id=server_id, role_id=role_id)
-        
         self.lastfinance = self.generate("上月手账")
         self.thisfinance = self.generate("本月手账")
         self.hcoin = self.generate("水晶明细")
@@ -292,11 +277,11 @@ if __name__ == '__main__':
     spider = Finance(qid="1542292829")
     # 1551044405
     # spider = GetInfo(server_id='bb01',role_id='112854881')
-    # try:
-    #     _,data = asyncio.run(spider.fetch(spider.valkyrie))
-    #     print(data)
-    # except InfoError as e:
-    #     print(e)
-    # with open(os.path.join(os.path.dirname(__file__),f"dist/chara_ch.json"),'w',encoding='utf8') as f:
-    #     json.dump(data,f,indent=4,ensure_ascii=False)
-    #     f.close()
+    try:
+        data = asyncio.run(spider.get_finance())
+        print(data)
+    except InfoError as e:
+        print(e)
+    with open(os.path.join(os.path.dirname(__file__),f"dist/financech.json"),'w',encoding='utf8') as f:
+        json.dump(data,f,indent=4,ensure_ascii=False)
+        f.close()
