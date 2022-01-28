@@ -58,7 +58,7 @@ ps:每个uid只有首次查询的时候需要提供服务器.
 ## 更新日志
 ### 2022/1/28
 1. 新增查询手账
-   1. 支持使用egenshin已绑定的cookie,需要在config中填写配置,详见[config_example.yaml](.config_example.yaml)
+   1. 支持使用egenshin已绑定的cookie,需要在config中填写配置,详见[config_example.yaml](config_example.yaml)
    2. 支持单独绑定,发送`bhf?`获取帮助
 ### 2022/1/23
 1. 新增查询所有女武神,命令为`bhv#`,注意:第一次生成图片时,因为要下载圣痕,武器的素材,所以耗费的时间较长,可以下载release里的压缩包来减少届时的下载延迟
@@ -68,5 +68,4 @@ ps:每个uid只有首次查询的时候需要提供服务器.
 5. 完善渠道信息
 6. 优化初次查询时的报错信息
 ## 致谢
-- [egenshin](https://github.com/pcrbot/erinilis-modules/tree/master/egenshin),用了部分艾琳琳造好的轮子
-- 
+- [egenshin](https://github.com/pcrbot/erinilis-modules/tree/master/egenshin),用了部分艾琳佬造好的轮子
