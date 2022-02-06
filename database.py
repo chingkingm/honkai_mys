@@ -28,6 +28,8 @@ class DB(SqliteDict):
         return self[qid]["role_id"]
     def set_uid_by_qid(self,qid:str,uid:str):
         data = self.get(qid)
+        if data is None:
+            data = {}
         data.update({"role_id":uid})
         self[qid] = data
     def get_cookie(self,qid:str):
