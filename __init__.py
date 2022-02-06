@@ -80,6 +80,7 @@ async def bh3_chara_card(bot:HoshinoBot,ev:CQEvent):
     except InfoError as e:
         await bot.send(ev,str(e),at_sender=True)
         return
+    await bot.send(ev,f"制图中,请稍后")
     region_db.set_region(role_id,region_id)
     qid_db.set_uid_by_qid(qid,role_id)
     dr = DrawCharacter(**data["data"])
