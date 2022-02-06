@@ -1,7 +1,5 @@
 import json
 import os
-import sqlite3
-from sys import path
 
 from typing import Optional
 from sqlitedict import SqliteDict
@@ -12,7 +10,7 @@ class DB(SqliteDict):
         if not os.path.exists(self.cahce_dir):
             os.mkdir(self.cahce_dir)
         filename = os.path.join(os.path.dirname(__file__),self.cahce_dir,filename)
-        super().__init__(filename=filename, tablename=tablename, flag=flag, autocommit=autocommit, journal_mode=journal_mode, encode=encode, decode=decode)   
+        super().__init__(filename=filename, tablename=tablename, flag=flag, autocommit=autocommit, journal_mode=journal_mode, encode=encode, decode=decode)
     def set_region(self,role_id,region):
         if self.get(role_id):
             data = self[role_id]
@@ -29,7 +27,9 @@ class DB(SqliteDict):
         """获取上次查询的uid"""
         return self[qid]["role_id"]
     def set_uid_by_qid(self,qid:str,uid:str):
-        self[qid] = {"role_id":uid}
+        data = self.get(qid)
+        data.update({"role_id":uid})
+        self[qid] = data
     def get_cookie(self,qid:str):
         try:
             cookie = self[qid]["cookie"]
