@@ -12,11 +12,8 @@ class DB(SqliteDict):
         filename = os.path.join(os.path.dirname(__file__),self.cahce_dir,filename)
         super().__init__(filename=filename, tablename=tablename, flag=flag, autocommit=autocommit, journal_mode=journal_mode, encode=encode, decode=decode)
     def set_region(self,role_id,region):
-        if self.get(role_id):
-            data = self[role_id]
-            data.update({"region":region})
-        else:
-            data = {"region":region}
+        data = self.get(role_id,{})
+        data.update({"region":region})
         self[role_id] = data
     def get_region(self,role_id) -> Optional[str]:
         if self.get(role_id):
@@ -27,9 +24,7 @@ class DB(SqliteDict):
         """获取上次查询的uid"""
         return self[qid]["role_id"]
     def set_uid_by_qid(self,qid:str,uid:str):
-        data = self.get(qid)
-        if data is None:
-            data = {}
+        data = self.get(qid,{})
         data.update({"role_id":uid})
         self[qid] = data
     def get_cookie(self,qid:str):
@@ -48,6 +43,6 @@ class DB(SqliteDict):
                 return None
         return cookie
     def set_cookie(self,qid:str,cookie:str):
-        data = self.get(qid)
+        data = self.get(qid,{})
         data.update({"cookie":cookie})
         self[qid] = data
