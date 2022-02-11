@@ -97,7 +97,8 @@ async def add_answer(bot:HoshinoBot,ev:CQEvent):
         return
     data[origin].append(new)
     with open(os.path.join(os.path.dirname(__file__),"answer.json"),'w',encoding='utf8') as f:
-        json.dump(data,f)
+        json.dump(data,f,ensure_ascii=False,indent=4)
+    await bot.send(ev,'done')
 if __name__ == '__main__':
     data = gen_voice_list()
     with open(os.path.join(os.path.dirname(__file__),"record.json"),'w',encoding='utf8') as f:
