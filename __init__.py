@@ -13,9 +13,13 @@ from hoshino.modules.honkai_mys.info_card import (
     DrawCharacter,
 )
 from nonebot import get_bot
-
+_help = """
+[bh#uid服务器]：查询角色卡片
+[bhv#uid服务器]：查询拥有的女武神
+[bhf]：查询手账
+"""
 _bot = get_bot()
-sv = Service("崩坏3角色卡片", enable_on_default=True, visible=True, bundle="崩坏3")
+sv = Service("崩坏3角色卡片", enable_on_default=True, visible=True, bundle="崩坏3", help_=_help)
 
 
 def handle_id(ev: CQEvent):
