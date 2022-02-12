@@ -99,6 +99,15 @@ async def add_answer(bot:HoshinoBot,ev:CQEvent):
     with open(os.path.join(os.path.dirname(__file__),"answer.json"),'w',encoding='utf8') as f:
         json.dump(data,f,ensure_ascii=False,indent=4)
     await bot.send(ev,'done')
+@sv.on_fullmatch("更新崩坏3语音列表")
+async def update_voice_list(bot:HoshinoBot,ev:CQEvent):
+    data = gen_voice_list()
+    data_dict = split_voice_by_chara(data)
+    with open(os.path.join(os.path.dirname(__file__),"record.json"),'w',encoding='utf8') as f:
+        json.dump(data_dict,f,indent=4,ensure_ascii=False)
+    num_normal = sum(len(data_dict["normal"][v]) for v in data_dict["normal"])
+    num_hard = sum(len(data_dict["hard"][v]) for v in data_dict["hard"])
+    await bot.send(ev,f"崩坏3语音列表更新完成，当前共有语音{num_hard+num_normal}条，其中普通{num_normal}条，困难{num_hard}条")
 if __name__ == '__main__':
     data = gen_voice_list()
     with open(os.path.join(os.path.dirname(__file__),"record.json"),'w',encoding='utf8') as f:
