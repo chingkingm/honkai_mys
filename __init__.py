@@ -15,7 +15,7 @@ from hoshino.modules.honkai_mys.info_card import (
 from nonebot import get_bot
 
 _bot = get_bot()
-sv = Service("崩坏3角色卡片", enable_on_default=True, visible=True)
+sv = Service("崩坏3角色卡片", enable_on_default=True, visible=True, bundle="崩坏3")
 
 
 def handle_id(ev: CQEvent):

@@ -1,5 +1,5 @@
 import random
-from hoshino import HoshinoBot, Service, MessageSegment
+from hoshino import HoshinoBot, Service, MessageSegment, priv
 from hoshino.util import FreqLimiter
 from hoshino.typing import CQEvent
 import json
@@ -101,6 +101,8 @@ async def add_answer(bot:HoshinoBot,ev:CQEvent):
     await bot.send(ev,'done')
 @sv.on_fullmatch("更新崩坏3语音列表")
 async def update_voice_list(bot:HoshinoBot,ev:CQEvent):
+    if not priv.check_priv(ev,priv.SU):
+        return
     data = gen_voice_list()
     data_dict = split_voice_by_chara(data)
     with open(os.path.join(os.path.dirname(__file__),"record.json"),'w',encoding='utf8') as f:
