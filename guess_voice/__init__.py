@@ -53,7 +53,7 @@ def gen_voice_list(origin_path=None):
     return ret_list
 
 
-@sv.on_rex(r"^(崩坏?|bh)(3|三)?猜语音")
+@sv.on_rex(r"^(崩坏?|bh|bbb|崩崩崩)(3|三)?猜语音")
 async def guess_voice(bot: HoshinoBot, ev: CQEvent):
     msg = str(ev.message.extract_plain_text().strip())
     if re.search(r"2|困难", msg):
@@ -75,21 +75,21 @@ async def check_answer(bot, ev: CQEvent):
     await game.check_answer(msg, ev.user_id)
 
 
-@sv.on_rex(r"^(崩坏?|bh)(3|三)?语音([^:]+)$")
+@sv.on_rex(r"^(崩坏?|bh|bbb|崩崩崩)(3|三)?语音([^:]+)$")
 async def send_voice(bot: HoshinoBot, ev: CQEvent):
     msg = ev["match"].group(3)
     uid = ev.user_id
+    if not flmt.check(uid):
+        await bot.send(
+            ev,
+            f"{FN}s内只能获取一次语音，请{int(flmt.left_time(uid))}s后再试。",
+            at_sender=True,
+        )
+        return
     a_list = GameSession.__load__("answer.json")
     assert isinstance(a_list, dict)
     for k, v in a_list.items():
         if msg in v:
-            if not flmt.check(uid):
-                await bot.send(
-                    ev,
-                    f"{FN}s内只能获取一次语音，{int(flmt.left_time(uid))}s后再试。",
-                    at_sender=True,
-                )
-                return
             try:
                 v_list = GameSession.__load__()["normal"][k]
             except KeyError:
@@ -102,7 +102,7 @@ async def send_voice(bot: HoshinoBot, ev: CQEvent):
     await bot.send(ev, f"没找到【{msg}】的语音，请检查输入。", at_sender=True)
 
 
-@sv.on_rex(r"^(崩坏?|bh)(3|三)?语音新增答案(\w+)[:|：](\w+)$")
+@sv.on_rex(r"^(崩坏?|bh|bbb|崩崩崩)(3|三)?语音新增答案(\w+)[:|：](\w+)$")
 async def add_answer(bot: HoshinoBot, ev: CQEvent):
     if not priv.check_priv(ev, priv.SU):
         return
@@ -123,7 +123,7 @@ async def add_answer(bot: HoshinoBot, ev: CQEvent):
     await bot.send(ev, "添加完成。")
 
 
-@sv.on_fullmatch("更新崩坏3语音列表")
+@sv.on_rex(r"^更新(崩坏?|bh|bbb|崩崩崩)(3|三)?语音列表$")
 async def update_voice_list(bot: HoshinoBot, ev: CQEvent):
     if not priv.check_priv(ev, priv.SU):
         return
