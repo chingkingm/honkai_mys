@@ -67,11 +67,11 @@ async def guess_voice(bot: HoshinoBot, ev: CQEvent):
 
 @sv.on_message()
 async def check_answer(bot, ev: CQEvent):
-    msg = ev.message.extract_plain_text().strip()
-    msg = msg.lower().replace(",", "和").replace("，", "和")
     game = GameSession(ev.group_id)
     if not game.is_start:
         return
+    msg = ev.message.extract_plain_text().strip()
+    msg = msg.lower().replace(",", "和").replace("，", "和")
     await game.check_answer(msg, ev.user_id)
 
 
@@ -102,15 +102,12 @@ async def send_voice(bot: HoshinoBot, ev: CQEvent):
     await bot.send(ev, f"没找到【{msg}】的语音，请检查输入。", at_sender=True)
 
 
-@sv.on_rex(r"^(崩坏?|bh)(3|三)?语音新增答案(\w+[:|：]\w+)")
+@sv.on_rex(r"^(崩坏?|bh)(3|三)?语音新增答案(\w+)[:|：](\w+)$")
 async def add_answer(bot: HoshinoBot, ev: CQEvent):
     if not priv.check_priv(ev, priv.SU):
         return
-    msg = ev["match"].group(3)
-    try:
-        origin, new = re.split(r":|：", msg)
-    except Exception:
-        return
+    origin = ev["match"].group(3)
+    new = ev["match"].group(4)
     data = GameSession.__load__("answer.json")
     if origin not in data:
         await bot.send(ev,f"{origin}不存在。")
