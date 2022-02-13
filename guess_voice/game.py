@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from shutil import copy
 
 from apscheduler.triggers.date import DateTrigger
+from loguru import logger
 from hoshino import MessageSegment, get_bot
 from nonebot import scheduler
 
@@ -71,10 +72,7 @@ class GameSession:
     @property
     def answer(self) -> list:
         self.chara = game_record[self.group_id]["chara"]
-        with open(
-            os.path.join(os.path.dirname(__file__), "answer.json"), "r", encoding="utf8"
-        ) as f:
-            alist = json.load(f)
+        alist = self.__load__("answer.json")
         return alist[self.chara]
 
     @property
