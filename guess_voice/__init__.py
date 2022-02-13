@@ -26,7 +26,7 @@ def split_voice_by_chara(v_list: list):
     }
     for voice in v_list:
         op_dict = ret["hard"] if "拟声词" in voice["voice_path"] else ret["normal"]
-        chara = re.split('-|\(', voice['voice_name'])[0].strip()
+        chara = re.split("-|\(", voice["voice_name"])[0].strip()
         if re.search(r"《|【", chara):
             continue
         if not op_dict.get(chara):
@@ -38,7 +38,7 @@ def split_voice_by_chara(v_list: list):
 def gen_voice_list(origin_path=None):
     """递归生成语音列表"""
     voice_dir = os.path.join(os.path.dirname(__file__), "../assets/record")
-    if origin_path == None:
+    if origin_path is None:
         origin_path = voice_dir
     ret_list = []
     for item in os.listdir(origin_path):
@@ -53,7 +53,7 @@ def gen_voice_list(origin_path=None):
     return ret_list
 
 
-@sv.on_prefix(("崩坏3猜语音", "崩坏猜语音", "bh3猜语音", "bh猜语音", "崩3猜语音", "崩三猜语音", "崩坏三猜语音"))
+@sv.on_rex(r"^(崩坏?|bh)(3|三)?猜语音")
 async def guess_voice(bot: HoshinoBot, ev: CQEvent):
     msg = str(ev.message.extract_plain_text().strip())
     if re.search(r"2|困难", msg):
@@ -75,18 +75,25 @@ async def check_answer(bot, ev: CQEvent):
     await game.check_answer(msg, ev.user_id)
 
 
-@sv.on_prefix(("崩坏3语音", "崩坏语音", "bh3语音", "bh语音", "崩3语音", "崩三语音"))
+@sv.on_rex(r"^(崩坏?|bh)(3|三)?语音([^:]+)$")
 async def send_voice(bot: HoshinoBot, ev: CQEvent):
-    msg = ev.message.extract_plain_text().strip()
+    msg = ev["match"].group(3)
     uid = ev.user_id
     a_list = GameSession.__load__("answer.json")
-    assert(isinstance(a_list, dict))
+    assert isinstance(a_list, dict)
     for k, v in a_list.items():
         if msg in v:
             if not flmt.check(uid):
-                await bot.send(ev, f"{FN}s内只能获取一次语音，{int(flmt.left_time(uid))}s后再试。", at_sender=True)
+                await bot.send(
+                    ev,
+                    f"{FN}s内只能获取一次语音，{int(flmt.left_time(uid))}s后再试。",
+                    at_sender=True,
+                )
                 return
-            v_list = GameSession.__load__()['normal'][k]
+            try:
+                v_list = GameSession.__load__()["normal"][k]
+            except KeyError:
+                await bot.send(ev,f"语音列表未生成或有错误，请先发送‘更新崩坏3语音列表’来更新")
             voice = random.choice(v_list)
             voice_path = f"file:///{os.path.join(os.path.dirname(__file__),'../assets/record',voice['voice_path'])}"
             await bot.send(ev, MessageSegment.record(voice_path))
@@ -95,22 +102,28 @@ async def send_voice(bot: HoshinoBot, ev: CQEvent):
     await bot.send(ev, f"没找到【{msg}】的语音，请检查输入。", at_sender=True)
 
 
-@sv.on_prefix("崩坏3语音新增答案")
+@sv.on_rex(r"^(崩坏?|bh)(3|三)?语音新增答案(\w+[:|：]\w+)")
 async def add_answer(bot: HoshinoBot, ev: CQEvent):
-    msg = ev.message.extract_plain_text().strip()
+    if not priv.check_priv(ev, priv.SU):
+        return
+    msg = ev["match"].group(3)
     try:
         origin, new = re.split(r":|：", msg)
     except Exception:
         return
     data = GameSession.__load__("answer.json")
     if origin not in data:
+        await bot.send(ev,f"{origin}不存在。")
         return
     if new in data[origin]:
+        await bot.send(ev,f"答案已存在。")
         return
     data[origin].append(new)
-    with open(os.path.join(os.path.dirname(__file__), "answer.json"), 'w', encoding='utf8') as f:
+    with open(
+        os.path.join(os.path.dirname(__file__), "answer.json"), "w", encoding="utf8"
+    ) as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
-    await bot.send(ev, 'done')
+    await bot.send(ev, "添加完成。")
 
 
 @sv.on_fullmatch("更新崩坏3语音列表")
@@ -119,12 +132,20 @@ async def update_voice_list(bot: HoshinoBot, ev: CQEvent):
         return
     data = gen_voice_list()
     data_dict = split_voice_by_chara(data)
-    with open(os.path.join(os.path.dirname(__file__), "record.json"), 'w', encoding='utf8') as f:
+    with open(
+        os.path.join(os.path.dirname(__file__), "record.json"), "w", encoding="utf8"
+    ) as f:
         json.dump(data_dict, f, indent=4, ensure_ascii=False)
     num_normal = sum(len(data_dict["normal"][v]) for v in data_dict["normal"])
     num_hard = sum(len(data_dict["hard"][v]) for v in data_dict["hard"])
-    await bot.send(ev, f"崩坏3语音列表更新完成，当前共有语音{num_hard+num_normal}条，其中普通{num_normal}条，困难{num_hard}条")
-if __name__ == '__main__':
+    await bot.send(
+        ev, f"崩坏3语音列表更新完成，当前共有语音{num_hard+num_normal}条，其中普通{num_normal}条，困难{num_hard}条"
+    )
+
+
+if __name__ == "__main__":
     data = gen_voice_list()
-    with open(os.path.join(os.path.dirname(__file__), "record.json"), 'w', encoding='utf8') as f:
+    with open(
+        os.path.join(os.path.dirname(__file__), "record.json"), "w", encoding="utf8"
+    ) as f:
         json.dump(split_voice_by_chara(data), f, indent=4, ensure_ascii=False)

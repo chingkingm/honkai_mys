@@ -164,3 +164,5 @@ assets/QuestBossIcon/*
 assets/StigmataIcons/*
 assets/WeaponIcons/*
 assets/record/*
+guess_voice/record.json
+guess_voice/answer.json
