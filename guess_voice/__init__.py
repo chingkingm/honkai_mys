@@ -3,9 +3,10 @@ import os
 import random
 import re
 
-from hoshino import HoshinoBot, MessageSegment, Service, priv
-from hoshino.typing import CQEvent
-from hoshino.util import FreqLimiter
+from nonebot import on_regex
+from nonebot.adapters.onebot.v11 import Bot, Event, MessageSegment
+from nonebot.params import RegexGroup
+from nonebot.permission import SUPERUSER
 
 from .game import GameSession
 
@@ -13,9 +14,11 @@ _help = """
 [崩坏3猜语音]：正常舰桥、战斗等语音
 [崩坏3猜语音2/困难]：简短的语气或拟声词
 """
-FN = 30
-flmt = FreqLimiter(FN)
-sv = Service("崩坏3猜语音", bundle="崩坏3", help_=_help)
+guess = on_regex(r"^(崩坏?|bh|bbb|崩崩崩)(3|三)?猜语音")
+send_v = on_regex(r"^(崩坏?|bh|bbb|崩崩崩)(3|三)?语音([^:]+)$")
+add_ans = on_regex(
+    r"^(崩坏?|bh|bbb|崩崩崩)(3|三)?语音新增答案(\w+)[:|：](\w+)$", permission=SUPERUSER)
+update = on_regex(r"^更新(崩坏?|bh|bbb|崩崩崩)(3|三)?语音列表$", permission=SUPERUSER)
 
 
 def split_voice_by_chara(v_list: list):
@@ -53,39 +56,36 @@ def gen_voice_list(origin_path=None):
     return ret_list
 
 
-@sv.on_rex(r"^(崩坏?|bh|bbb|崩崩崩)(3|三)?猜语音")
-async def guess_voice(bot: HoshinoBot, ev: CQEvent):
+@guess.handle()
+async def guess_voice(bot: Bot, ev: Event):
     msg = str(ev.message.extract_plain_text().strip())
     if re.search(r"2|困难", msg):
         difficulty = "hard"
     else:
         difficulty = "normal"
     game = GameSession(ev.group_id)
+    game.bot = bot
     ret = await game.start(difficulty=difficulty)
     await bot.send(ev, ret)
 
 
-@sv.on_message()
-async def check_answer(bot, ev: CQEvent):
+@guess.receive()
+async def check_answer(bot, ev: Event):
     game = GameSession(ev.group_id)
+    game.bot = bot
     if not game.is_start:
         return
     msg = ev.message.extract_plain_text().strip()
     msg = msg.lower().replace(",", "和").replace("，", "和")
     await game.check_answer(msg, ev.user_id)
+    if game.is_start:
+        await guess.reject()
 
 
-@sv.on_rex(r"^(崩坏?|bh|bbb|崩崩崩)(3|三)?语音([^:]+)$")
-async def send_voice(bot: HoshinoBot, ev: CQEvent):
-    msg = ev["match"].group(3)
-    uid = ev.user_id
-    if not flmt.check(uid):
-        await bot.send(
-            ev,
-            f"{FN}s内只能获取一次语音，请{int(flmt.left_time(uid))}s后再试。",
-            at_sender=True,
-        )
-        return
+@send_v.handle()
+async def send_voice(bot: Bot, ev: Event, hit: list = RegexGroup()):
+    print(hit)
+    msg = hit[2]
     a_list = GameSession.__load__("answer.json")
     assert isinstance(a_list, dict)
     for k, v in a_list.items():
@@ -93,27 +93,24 @@ async def send_voice(bot: HoshinoBot, ev: CQEvent):
             try:
                 v_list = GameSession.__load__()["normal"][k]
             except KeyError:
-                await bot.send(ev,f"语音列表未生成或有错误，请先发送‘更新崩坏3语音列表’来更新")
+                await send_v.finish(f"语音列表未生成或有错误，请先发送‘更新崩坏3语音列表’来更新")
             voice = random.choice(v_list)
             voice_path = f"file:///{os.path.join(os.path.dirname(__file__),'../assets/record',voice['voice_path'])}"
             await bot.send(ev, MessageSegment.record(voice_path))
-            flmt.start_cd(uid)
             return
     await bot.send(ev, f"没找到【{msg}】的语音，请检查输入。", at_sender=True)
 
 
-@sv.on_rex(r"^(崩坏?|bh|bbb|崩崩崩)(3|三)?语音新增答案(\w+)[:|：](\w+)$")
-async def add_answer(bot: HoshinoBot, ev: CQEvent):
-    if not priv.check_priv(ev, priv.SU):
-        return
-    origin = ev["match"].group(3)
-    new = ev["match"].group(4)
+@add_ans.handle()
+async def add_answer(bot: Bot, ev: Event, hit: list = RegexGroup()):
+    origin = hit[3]
+    new = hit[4]
     data = GameSession.__load__("answer.json")
     if origin not in data:
-        await bot.send(ev,f"{origin}不存在。")
+        await bot.send(ev, f"{origin}不存在。")
         return
     if new in data[origin]:
-        await bot.send(ev,f"答案已存在。")
+        await bot.send(ev, f"答案已存在。")
         return
     data[origin].append(new)
     with open(
@@ -123,10 +120,8 @@ async def add_answer(bot: HoshinoBot, ev: CQEvent):
     await bot.send(ev, "添加完成。")
 
 
-@sv.on_rex(r"^更新(崩坏?|bh|bbb|崩崩崩)(3|三)?语音列表$")
-async def update_voice_list(bot: HoshinoBot, ev: CQEvent):
-    if not priv.check_priv(ev, priv.SU):
-        return
+@update.handle()
+async def update_voice_list(bot: Bot, ev: Event):
     data = gen_voice_list()
     data_dict = split_voice_by_chara(data)
     with open(
