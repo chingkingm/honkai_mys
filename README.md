@@ -9,9 +9,9 @@
     - [2022/1/23](#2022123)
   - [致谢](#致谢)
 ## 安装
-- 在hoshino的modules文件夹下clone本仓库
+- 在插件文件夹下clone本仓库
     ``` bash
-    git clone https://github.com/chingkingm/honkai_mys.git
+    git clone -b nonebot https://github.com/chingkingm/honkai_mys.git
     ```
 - 安装依赖
     ``` bash
@@ -22,7 +22,7 @@
   - 前往[B站视频](https://www.bilibili.com/video/BV16J41157du)，根据简介下载语音文件
   - 完全解压后放到./assets/record文件夹下
   - ps:5.5版本有一个语音命名有问题，参照[说明](./guess_voice/readme.md)进行重命名
-- 修改__bot__.py,加入插件,重启bot
+- 修改相应文件以加载插件
 
 ## 使用
 |命令|功能|备注|
