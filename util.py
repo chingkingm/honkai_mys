@@ -1,35 +1,8 @@
 # 一些egenshin的轮子,感谢艾琳佬
-from nonebot import message_preprocessor
-from hoshino import CanceledException, priv, trigger
+
 import datetime,functools,inspect
 private_prefix = []
 
-
-# support private message
-@message_preprocessor
-async def private_handler(bot, ev, _):
-    if ev.detail_type != 'private':
-        return
-    for t in trigger.chain:
-        for service in t.find_handler(ev):
-            sv = service.sv
-            if sv in private_prefix:
-                if priv.get_user_priv(ev) >= priv.NORMAL:
-                    try:
-                        await service.func(bot, ev)
-                    except CanceledException:
-                        raise
-                    sv.logger.info(
-                        f'Private Message {ev.message_id} triggered {service.func.__name__}.'
-                    )
-
-
-def support_private(sv):
-    def wrap(func):
-        private_prefix.append(sv)
-        return func
-
-    return wrap
 
 # cache from egenshin
 def cache(ttl=datetime.timedelta(hours=1), **kwargs):

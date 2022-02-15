@@ -7,9 +7,9 @@ import math
 from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
 from operator import attrgetter
-from hoshino.modules.honkai_mys.mytyping import FullInfo,AbyssReport,BattleFieldReport,Character,FinanceInfo
-from hoshino.modules.honkai_mys.mypillow import myDraw
-from hoshino.modules.honkai_mys.info import InfoError
+from .mytyping import FullInfo,AbyssReport,BattleFieldReport,Character,FinanceInfo
+from .mypillow import myDraw
+from .info import InfoError
 class ItemTrans(object):
     """
     - 数字/字母 -> 文字

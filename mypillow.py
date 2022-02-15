@@ -2,7 +2,7 @@ from io import BytesIO
 import requests
 import re
 import os
-from hoshino import aiorequests
+from httpx import AsyncClient
 from typing import List,Tuple
 from PIL import ImageDraw,Image,ImageChops
 from math import sin,cos,pi
@@ -59,8 +59,9 @@ class myDraw(ImageDraw.ImageDraw):
     @staticmethod
     async def _GetNetPic(url:str):
         if url.startswith("http://q1.qlogo.cn/"):
-            resp = await aiorequests.get(url)
-            return BytesIO(await resp.content)
+            async with AsyncClient() as aiorequests:
+                resp = await aiorequests.get(url)
+                return BytesIO(await resp.content)
         image_type,img_name = url.split("/")[-2:]
         ASSETS_PATH = os.path.join(os.path.dirname(__file__),'assets')
         image_type_path = os.path.join(ASSETS_PATH,image_type)
@@ -70,9 +71,9 @@ class myDraw(ImageDraw.ImageDraw):
             ex_image = os.listdir(image_type_path)
             if img_name in ex_image:
                 return os.path.join(image_type_path,img_name)
-        
-        resp = await aiorequests.get(url)
-        data = await resp.content
+        async with AsyncClient() as aiorequests:
+            resp = await aiorequests.get(url)
+        data = resp.content
         with open(os.path.join(image_type_path,img_name),mode="wb") as im:
             im.write(data)
             im.close()

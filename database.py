@@ -3,7 +3,7 @@ import os
 
 from typing import Optional
 from sqlitedict import SqliteDict
-from hoshino.modules.honkai_mys.mytyping import config
+from .mytyping import config
 class DB(SqliteDict):
     cahce_dir = os.path.join(os.path.dirname(__file__),config.cache_dir)
     def __init__(self, filename=None, tablename='unnamed', flag='c', autocommit=True, journal_mode="DELETE", encode=json.dumps, decode=json.loads):

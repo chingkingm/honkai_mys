@@ -11,12 +11,13 @@ from operator import itemgetter
 from typing import Tuple
 
 import requests
-from hoshino import aiorequests
-from hoshino.modules.honkai_mys.mytyping import config
+from httpx import AsyncClient
+
+from .mytyping import config
 
 COOKIES = config.cookies[0]
-from hoshino.modules.honkai_mys.database import DB
-from hoshino.modules.honkai_mys.util import NotBindError, cache
+from .database import DB
+from .util import NotBindError, cache
 
 
 class InfoError(Exception):
@@ -179,11 +180,9 @@ class GetInfo(MysApi):
             headers = GetInfo.gen_header('',cookie)
             item = url.split("/")[-1]
         """高级区及以下的深渊查询api不可用,使用latest代替"""
-        req = await aiorequests.get(
-            url=url,
-            headers=headers
-        )
-        data = json.loads(await req.text)
+        async with AsyncClient() as client:
+            req = await client.get(url=url,headers=headers)
+        data = json.loads(req.text)
         # print(data)
         retcode = data["retcode"]
         if retcode == 1008:
