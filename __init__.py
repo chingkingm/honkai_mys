@@ -12,6 +12,7 @@ from hoshino.modules.honkai_mys.info_card import (
     ItemTrans,
     DrawCharacter,
 )
+from hoshino.modules.honkai_mys.mytyping import Index
 from nonebot import get_bot
 _help = """
 [bh#uid服务器]：查询角色卡片
@@ -19,7 +20,8 @@ _help = """
 [bhf]：查询手账
 """
 _bot = get_bot()
-sv = Service("崩坏3角色卡片", enable_on_default=True, visible=True, bundle="崩坏3", help_=_help)
+sv = Service("崩坏3角色卡片", enable_on_default=True,
+             visible=True, bundle="崩坏3", help_=_help)
 
 
 def handle_id(ev: CQEvent):
@@ -43,7 +45,8 @@ def handle_id(ev: CQEvent):
     elif role_id is not None and region_name is None:
         region_id = region_db.get_region(role_id.group())
         if not region_id:
-            raise InfoError(f"{role_id.group()}为首次查询,请输入服务器名称.如:bh#100074751官服")
+            raise InfoError(
+                f"{role_id.group()}为首次查询,请输入服务器名称.如:bh#100074751官服")
     else:
         try:
             region_id = ItemTrans.server2id(region_name.group())
@@ -93,14 +96,16 @@ async def bh3_chara_card(bot: HoshinoBot, ev: CQEvent):
     spider = GetInfo(role_id=role_id, server_id=region_id)
     try:
         _, data = await spider.fetch(spider.valkyrie)
+        _, index_data = await spider.fetch(spider.index)
     except InfoError as e:
         await bot.send(ev, str(e), at_sender=True)
         return
-    await bot.send(ev, f"制图中,请稍后")
+    await bot.send(ev, MessageSegment.reply(ev.message_id)+"制图中，请稍后")
     region_db.set_region(role_id, region_id)
     qid_db.set_uid_by_qid(qid, role_id)
+    index = Index(**index_data["data"])
     dr = DrawCharacter(**data["data"])
-    im = await dr.draw_chara()
+    im = await dr.draw_chara(index, qid)
     img = MessageSegment.image(im)
     await bot.send(ev, img, at_sender=True)
     return
