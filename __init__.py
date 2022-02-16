@@ -9,7 +9,7 @@ from .database import DB
 from .info import Finance, GetInfo, InfoError
 from .info_card import DrawCharacter, DrawFinance, DrawIndex, ItemTrans
 from .util import NotBindError
-
+from .mytyping import Index
 _help = """
 [bh#uid服务器]：查询角色卡片
 [bhv#uid服务器]：查询拥有的女武神
@@ -92,14 +92,16 @@ async def bh3_chara_card(bot: Bot, ev: Event, args:Message=CommandArg()):
     spider = GetInfo(role_id=role_id, server_id=region_id)
     try:
         _, data = await spider.fetch(spider.valkyrie)
+        _, index_data = await spider.fetch(spider.index)
     except InfoError as e:
         await bot.send(ev, str(e), at_sender=True)
         return
-    await bot.send(ev, f"制图中,请稍后")
+    await bot.send(ev, MessageSegment.reply(ev.message_id)+"制图中，请稍后")
     region_db.set_region(role_id, region_id)
     qid_db.set_uid_by_qid(qid, role_id)
+    index = Index(**index_data["data"])
     dr = DrawCharacter(**data["data"])
-    im = await dr.draw_chara()
+    im = await dr.draw_chara(index, qid)
     img = MessageSegment.image(im)
     await bot.send(ev, img, at_sender=True)
     return

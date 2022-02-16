@@ -4,13 +4,13 @@ import re
 import os
 from httpx import AsyncClient
 from typing import List,Tuple
-from PIL import ImageDraw,Image,ImageChops
+from PIL import ImageDraw, Image, ImageChops, ImageFont
 from math import sin,cos,pi
 class myDraw(ImageDraw.ImageDraw):
     def __init__(self,im) -> None:
         super().__init__(im)
     @classmethod
-    async def avatar(cls,bg:Image.Image,qid:str=None,avatar_url:str=None):
+    async def avatar(cls, bg: Image.Image, qid: str = None, avatar_url: str = None, center: Tuple[int, int] = [562, 267]):
         """头像"""
         qava_url = "http://q1.qlogo.cn/g?b=qq&nk={qid}&s=140"
         if avatar_url is not None:
@@ -28,9 +28,27 @@ class myDraw(ImageDraw.ImageDraw):
         with Image.open(pic_data) as pic:
             pic = cls.ImgResize(pic,256/pic.width).convert("RGBA")
             with Image.new(mode="RGBA",size=bg.size,color="#ece5d8") as im:
-                im.alpha_composite(pic,dest=(int(562-0.5*pic.width),int(267-0.5*pic.height)))
+                im.alpha_composite(pic, dest=(
+                    int(center[0]-0.5*pic.width), int(center[1]-0.5*pic.height)))
                 im.alpha_composite(bg)
                 return im
+    @staticmethod
+    def get_font(font: str = "65", size: int = 36):
+        font = str(font)
+        font_path_65 = os.path.join(os.path.dirname(
+            __file__), f"assets/font/HYWenHei-65W.ttf")
+        font_path_85 = os.path.join(os.path.dirname(
+            __file__), f"assets/font/HYWenHei-85W.ttf")
+        font_path_sara = os.path.join(os.path.dirname(
+            __file__), f"assets/font/sarasa-ui-sc-semibold.ttf")   # hywh缺字
+        if font == '65':
+            font_path = font_path_65
+        elif font == '85':
+            font_path = font_path_85
+        elif font == 's':
+            font_path = font_path_sara
+        return ImageFont.truetype(font_path, size)
+
     @staticmethod
     def radar(origin_image:Image.Image,data:List[float],center:Tuple[float,float],radius:float):
         """雷达图,求出各点坐标,调用ImageDraw.polygon"""
