@@ -27,6 +27,9 @@ sv = Service("崩坏3角色卡片", enable_on_default=True,
 def handle_id(ev: CQEvent):
     msg = ev.message.extract_plain_text().strip()
     qid = str(ev.user_id)
+    for mes in ev.message:
+        if mes.type == 'at':
+            qid = mes.data['qq']
     region_db = DB("uid.sqlite", tablename="uid_region")
     qid_db = DB("uid.sqlite", tablename="qid_uid")
     role_id = re.search(r"\d{1,}", msg)
