@@ -28,6 +28,11 @@ def handle_id(ev: Event,msg:str):
     qid_db = DB("uid.sqlite", tablename="qid_uid")
     role_id = re.search(r"\d{1,}", msg)
     region_name = re.search(r"\D{1,}\d?", msg)
+    for mes in ev.get_message():
+        if mes.type == 'at':
+            qid = mes.data['qq']
+            role_id = None
+            break
     if re.search(r"[mM][yY][sS]|米游社", msg):
         spider = GetInfo(mysid=role_id.group())
         region_id, role_id = spider.mys2role(spider.getrole)
