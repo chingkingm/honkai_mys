@@ -34,7 +34,8 @@ class ItemTrans(object):
             return "超弦空间"
         t = {
             "OW": "迪拉克之海",
-            "Quantum": "量子奇点"
+            "Quantum": "量子奇点",
+            "Greedy": "量子流形"
         }
         return t[_type]
 
@@ -257,10 +258,10 @@ class DrawIndex(FullInfo):
                 self.index.stats.old_abyss.level_of_quantum), fill=(133, 96, 61), font=font_6532, anchor='mm')
             draw.line(xy=[(310, 790), (310, 917)],
                       fill=(161, 154, 129), width=0)
-            draw.text(xy=(410, 821), text="迪拉克之海", fill=(
+            draw.text(xy=(410, 821), text="量子流形", fill=(
                 133, 96, 61), font=font_6536, anchor='mm')
             draw.text(xy=(410, 885), text=ItemTrans.abyss_level(
-                self.index.stats.old_abyss.level_of_ow), fill=(133, 96, 61), font=font_6532, anchor='mm')
+                self.index.stats.old_abyss.level_of_greedy), fill=(133, 96, 61), font=font_6532, anchor='mm')
         else:
             draw.text(xy=(310, 821), text="超弦空间", fill=(
                 133, 96, 61), font=font_6536, anchor="mm")
@@ -294,9 +295,9 @@ class DrawIndex(FullInfo):
             133, 96, 61), font=font_8548, anchor="mm")
         # 往世乐土
         if self.index.preference.is_god_war_unlock:
-            draw.text(xy=(307, 1645), text=str(self.index.stats.god_war_max_punish_level), fill=(
+            draw.text(xy=(307, 1645), text=str(self.index.stats.god_war_max_support_point), fill=(
                 133, 96, 61), font=font_8548, anchor="mm")
-            draw.text(xy=(809, 1645), text=str(self.index.stats.god_war_max_challenge_level)+"层"+str(
+            draw.text(xy=(809, 1645), text=str(
                 self.index.stats.god_war_max_challenge_score), fill=(133, 96, 61), font=font_8548, anchor="mm")
             draw.text(xy=(307, 1789), text=str(self.index.stats.god_war_max_level_avatar_number), fill=(
                 133, 96, 61), font=font_8548, anchor="mm")

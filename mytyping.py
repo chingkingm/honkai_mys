@@ -62,6 +62,7 @@ class _abyss(BaseModel):
     cup_number: Optional[int]
     level_of_quantum: Optional[str]
     level_of_ow: Optional[str]
+    level_of_greedy: Optional[str]
 
 
 class _stats(BaseModel):
@@ -79,6 +80,7 @@ class _stats(BaseModel):
     god_war_max_challenge_score: int
     god_war_max_challenge_level: int
     god_war_max_level_avatar_number: int
+    god_war_max_support_point: int
     battle_field_area: int
     battle_field_score: int
     abyss_score: int
