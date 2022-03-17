@@ -1,35 +1,33 @@
 import re
 import sys
-from hoshino import HoshinoBot, MessageSegment, Service
-from hoshino.modules.honkai_mys.util import NotBindError
+
+from hoshino import HoshinoBot, MessageSegment, Service, get_bot
 from hoshino.typing import CQEvent
 
-from hoshino.modules.honkai_mys.database import DB
-from hoshino.modules.honkai_mys.info import GetInfo, InfoError, Finance
-from hoshino.modules.honkai_mys.info_card import (
-    DrawFinance,
-    DrawIndex,
-    ItemTrans,
-    DrawCharacter,
-)
-from hoshino.modules.honkai_mys.mytyping import Index
-from nonebot import get_bot
+from .modules.database import DB
+from .modules.image_handle import (DrawCharacter, DrawFinance, DrawIndex,
+                                   ItemTrans)
+from .modules.mytyping import Index
+from .modules.query import Finance, GetInfo, InfoError
+from .modules.util import NotBindError
+
 _help = """
 [bh#uid服务器]：查询角色卡片
 [bhv#uid服务器]：查询拥有的女武神
 [bhf]：查询手账
 """
 _bot = get_bot()
-sv = Service("崩坏3角色卡片", enable_on_default=True,
-             visible=True, bundle="崩坏3", help_=_help)
+sv = Service(
+    "崩坏3角色卡片", enable_on_default=True, visible=True, bundle="崩坏3", help_=_help
+)
 
 
 def handle_id(ev: CQEvent):
     msg = ev.message.extract_plain_text().strip()
     qid = str(ev.user_id)
     for mes in ev.message:
-        if mes.type == 'at':
-            qid = mes.data['qq']
+        if mes.type == "at":
+            qid = mes.data["qq"]
     region_db = DB("uid.sqlite", tablename="uid_region")
     qid_db = DB("uid.sqlite", tablename="qid_uid")
     role_id = re.search(r"\d{1,}", msg)
@@ -48,8 +46,7 @@ def handle_id(ev: CQEvent):
     elif role_id is not None and region_name is None:
         region_id = region_db.get_region(role_id.group())
         if not region_id:
-            raise InfoError(
-                f"{role_id.group()}为首次查询,请输入服务器名称.如:bh#100074751官服")
+            raise InfoError(f"{role_id.group()}为首次查询,请输入服务器名称.如:bh#100074751官服")
     else:
         try:
             region_id = ItemTrans.server2id(region_name.group())
@@ -103,7 +100,7 @@ async def bh3_chara_card(bot: HoshinoBot, ev: CQEvent):
     except InfoError as e:
         await bot.send(ev, str(e), at_sender=True)
         return
-    await bot.send(ev, MessageSegment.reply(ev.message_id)+"制图中，请稍后")
+    await bot.send(ev, MessageSegment.reply(ev.message_id) + "制图中，请稍后")
     region_db.set_region(role_id, region_id)
     qid_db.set_uid_by_qid(qid, role_id)
     index = Index(**index_data["data"])

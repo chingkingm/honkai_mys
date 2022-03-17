@@ -3,22 +3,23 @@
 import os
 import yaml
 
-from datetime import datetime,date
+from datetime import datetime, date
 from pydantic import BaseModel
 from typing import List, Optional, Union
+
 
 class Config(BaseModel):
     cookies: List[str]
     is_egenshin: bool
-    egenshin_dir: Union[str,None]
+    egenshin_dir: Union[str, None]
     cache_dir: str
 
     @staticmethod
     def load_config() -> dict:
         with open(
-            os.path.join(os.path.dirname(__file__), f"config.yaml"),
-            mode="r",
-            encoding="utf8",
+                os.path.join(os.path.dirname(__file__),"../", "config.yaml"),
+                mode="r",
+                encoding="utf8",
         ) as f:
             CONFIG = yaml.load(f, Loader=yaml.FullLoader)
             f.close()
@@ -146,7 +147,7 @@ class AbyssReport(BaseModel):
     rank: Optional[int]
     settled_cup_number: Optional[int]
     cup_number: Optional[int]
-    elf: Union[_elf,None]
+    elf: Union[_elf, None]
     level: Union[int, str]
     settled_level: Optional[int]
     reward_type: Optional[str]
@@ -158,7 +159,7 @@ class Abyss(BaseModel):
 
 
 class BattleFieldInfo(BaseModel):
-    elf: Union[_elf,None]
+    elf: Union[_elf, None]
     lineup: List[_avatar]
     boss: _boss
     score: int
@@ -170,7 +171,8 @@ class BattleFieldReport(BaseModel):
     ranking_percentage: str
     area: int
     battle_infos: List[BattleFieldInfo]
-    time_second:datetime
+    time_second: datetime
+
 
 class BattleField(BaseModel):
     reports: List[BattleFieldReport]
@@ -197,7 +199,7 @@ class godWarRecord(BaseModel):
     conditions: List[godWarCondition]
     main_avatar: _avatar
     support_avatars: List[_avatar]
-    elf: Union[_elf,None]
+    elf: Union[_elf, None]
     extra_item_icon: str
 
 
@@ -275,49 +277,60 @@ class FullInfo(BaseModel):
     weeklyReport: WeeklyReport
     battleFieldReport: BattleField
 
+
 # 手账部分
 class sourcepercent(BaseModel):
-    action_id:int
-    num:int
-    name:str
-    percent:int
+    action_id: int
+    num: int
+    name: str
+    percent: int
+
+
 class LastMonthInfo(BaseModel):
-    group_by:List[sourcepercent]
-    month_star:int
-    month_hcoin:int
-    last_month_star:int
-    last_month_hcoin:int
-    star_rate:int
-    hcoin_rate:int
-    month_start:datetime
-    month_end:datetime
-    month:int
-    last_month:int
-    uid:str
-    month_level:int
+    group_by: List[sourcepercent]
+    month_star: int
+    month_hcoin: int
+    last_month_star: int
+    last_month_hcoin: int
+    star_rate: int
+    hcoin_rate: int
+    month_start: datetime
+    month_end: datetime
+    month: int
+    last_month: int
+    uid: str
+    month_level: int
+
+
 class findex(BaseModel):
-    uid:str
-    date:date
-    month:int
-    month_hcoin:int
-    month_star:int
-    month_level:int
-    day_hcoin:int
-    day_star:int
-    last_hcoin:int
-    last_star:int
+    uid: str
+    date: date
+    month: int
+    month_hcoin: int
+    month_star: int
+    month_level: int
+    day_hcoin: int
+    day_star: int
+    last_hcoin: int
+    last_star: int
+
+
 class finance_record(BaseModel):
-    action_id:int
-    time:datetime
-    add_num:int
-    action:str
+    action_id: int
+    time: datetime
+    add_num: int
+    action: str
+
+
 class FinanceRecord(BaseModel):
     """水晶星石通用"""
-    page:int
-    month:int
-    list:List[finance_record]
+    page: int
+    month: int
+    list: List[finance_record]
+
+
 class FinanceInfo(BaseModel):
-    getLastMonthInfo:LastMonthInfo
-    index:findex
-    getHcoinRecords:FinanceRecord
-    getStarRecords:FinanceRecord
+    getLastMonthInfo: LastMonthInfo
+    index: findex
+    getHcoinRecords: FinanceRecord
+    getStarRecords: FinanceRecord
