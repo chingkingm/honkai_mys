@@ -1,15 +1,22 @@
 import re
 
 from nonebot import on_command, on_regex
-from nonebot.adapters.onebot.v11 import (GROUP, PRIVATE_FRIEND, Bot, Event,
-                                         Message, MessageSegment)
+from nonebot.adapters.onebot.v11 import (
+    GROUP,
+    PRIVATE_FRIEND,
+    Bot,
+    Event,
+    Message,
+    MessageSegment,
+)
 from nonebot.params import CommandArg, RegexGroup
 
-from .database import DB
-from .info import Finance, GetInfo, InfoError
-from .info_card import DrawCharacter, DrawFinance, DrawIndex, ItemTrans
-from .util import NotBindError
-from .mytyping import Index
+from .modules.database import DB
+from .modules.query import Finance, GetInfo, InfoError
+from .modules.image_handle import DrawCharacter, DrawFinance, DrawIndex, ItemTrans
+from .modules.util import NotBindError
+from .modules.mytyping import Index
+
 _help = """
 [bh#uid服务器]：查询角色卡片
 [bhv#uid服务器]：查询拥有的女武神
@@ -17,11 +24,11 @@ _help = """
 """
 get_player = on_command("bh#")
 get_valkyrie = on_command("bhv#")
-get_finance = on_command("bhf",aliases={"手账","水晶手账"},permission=GROUP)
-bind_cookie = on_regex(r"(bhf|(水晶)?手账)绑定(\d+),(\w+)",permission=PRIVATE_FRIEND)
+get_finance = on_command("bhf", aliases={"手账", "水晶手账"}, permission=GROUP)
+bind_cookie = on_regex(r"(bhf|(水晶)?手账)绑定(\d+),(\w+)", permission=PRIVATE_FRIEND)
 
 
-def handle_id(ev: Event,msg:str):
+def handle_id(ev: Event, msg: str):
     msg = str(msg)
     qid = str(ev.get_user_id())
     region_db = DB("uid.sqlite", tablename="uid_region")
@@ -29,8 +36,8 @@ def handle_id(ev: Event,msg:str):
     role_id = re.search(r"\d{1,}", msg)
     region_name = re.search(r"\D{1,}\d?", msg)
     for mes in ev.get_message():
-        if mes.type == 'at':
-            qid = mes.data['qq']
+        if mes.type == "at":
+            qid = mes.data["qq"]
             role_id = None
             break
     if re.search(r"[mM][yY][sS]|米游社", msg):
@@ -63,11 +70,11 @@ def handle_id(ev: Event,msg:str):
 
 
 @get_player.handle()
-async def bh3_player_card(bot: Bot, ev: Event, args:Message=CommandArg()):
+async def bh3_player_card(bot: Bot, ev: Event, args: Message = CommandArg()):
     region_db = DB("uid.sqlite", tablename="uid_region")
     qid_db = DB("uid.sqlite", tablename="qid_uid")
     try:
-        role_id, region_id, qid = handle_id(ev,args)
+        role_id, region_id, qid = handle_id(ev, args)
     except InfoError as e:
         await bot.send(ev, str(e), at_sender=True)
         return
@@ -86,11 +93,11 @@ async def bh3_player_card(bot: Bot, ev: Event, args:Message=CommandArg()):
 
 
 @get_valkyrie.handle()
-async def bh3_chara_card(bot: Bot, ev: Event, args:Message=CommandArg()):
+async def bh3_chara_card(bot: Bot, ev: Event, args: Message = CommandArg()):
     region_db = DB("uid.sqlite", tablename="uid_region")
     qid_db = DB("uid.sqlite", tablename="qid_uid")
     try:
-        role_id, region_id, qid = handle_id(ev,args)
+        role_id, region_id, qid = handle_id(ev, args)
     except InfoError as e:
         await bot.send(ev, str(e), at_sender=True)
         return
@@ -101,7 +108,7 @@ async def bh3_chara_card(bot: Bot, ev: Event, args:Message=CommandArg()):
     except InfoError as e:
         await bot.send(ev, str(e), at_sender=True)
         return
-    await bot.send(ev, MessageSegment.reply(ev.message_id)+"制图中，请稍后")
+    await bot.send(ev, MessageSegment.reply(ev.message_id) + "制图中，请稍后")
     region_db.set_region(role_id, region_id)
     qid_db.set_uid_by_qid(qid, role_id)
     index = Index(**index_data["data"])
@@ -113,7 +120,7 @@ async def bh3_chara_card(bot: Bot, ev: Event, args:Message=CommandArg()):
 
 
 @get_finance.handle()
-async def show_finance(bot: Bot, ev: Event, args:Message=CommandArg()):
+async def show_finance(bot: Bot, ev: Event, args: Message = CommandArg()):
     qid = ev.get_user_id()
     msg = str(args)
     if msg.startswith("绑定"):
@@ -142,7 +149,7 @@ async def show_finance(bot: Bot, ev: Event, args:Message=CommandArg()):
 
 
 @bind_cookie.handle()
-async def bindcookie(ev: Event, msg:list=RegexGroup()):
+async def bindcookie(ev: Event, msg: list = RegexGroup()):
     qid = ev.get_user_id()
     cookieraw = f"{msg[2]},{msg[3]}"
     print(cookieraw)
@@ -154,4 +161,3 @@ async def bindcookie(ev: Event, msg:list=RegexGroup()):
     fid = DrawFinance(**fi)
     im = fid.draw()
     await bind_cookie.finish(message=MessageSegment.image(im))
-
