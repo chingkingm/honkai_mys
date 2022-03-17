@@ -147,11 +147,12 @@ class AbyssReport(BaseModel):
     rank: Optional[int]
     settled_cup_number: Optional[int]
     cup_number: Optional[int]
-    elf: Union[_elf, None]
-    level: Union[int, str]
-    settled_level: Optional[int]
-    reward_type: Optional[str]
-    type: Optional[str]
+    elf: Optional[_elf]
+    level: Union[int, str]  # 段位
+    settled_level: Optional[int]    # 终极区深渊结算后段位
+    reward_type: Optional[str]  # 低级深渊升降级
+    type: Optional[str] # 量子奇点|量子流形
+    floor: Optional[int]    # 量子流形层数，量子奇点为0
 
 
 class Abyss(BaseModel):

@@ -248,9 +248,11 @@ def pic2b64(im: Image.Image, quality: int = 100) -> str:
 
 
 async def draw_abyss(aby: AbyssReport) -> Image.Image:
-    with Image.open(
-        os.path.join(os.path.dirname(__file__), "../assets/abyss.png")
-    ) as im:
+    if aby.type == "Greedy":
+        bg_path = os.path.join(os.path.dirname(__file__), "../assets/abyss_greedy.png")
+    else:
+        bg_path = os.path.join(os.path.dirname(__file__), "../assets/abyss.png")
+    with Image.open(bg_path) as im:
         dr = myDraw(im)
         with Image.new(mode="RGBA", size=im.size) as temp:
             for n, val in enumerate(aby.lineup):
@@ -284,17 +286,38 @@ async def draw_abyss(aby: AbyssReport) -> Image.Image:
             temp.alpha_composite(img_boss, dest=(700, 76))
             im = temp.copy()
         dr = myDraw(im)
-        # font_wh65 = ImageFont.truetype(os.path.join(os.path.dirname(
-        # __file__), 'assets/font/HYWenHei-65W.ttf'), size=24)
         font_wh65 = myDraw.get_font(size=24)
-        # font_lxj = ImageFont.truetype(os.path.join(os.path.dirname(
-        # __file__), f"assets/font/HYLingXinTiJ.ttf"), size=48)
         font_lxj = myDraw.get_font("l", 48)
+        font_lxj_s = myDraw.get_font("l", 40)
         dr.text((39, 60), text=f"{aby.boss.name}", fill="white", font=font_wh65)
-        dr.text(
-            (865, 28), text=f"{aby.score:,}", fill="#0f9ed8", font=font_lxj, anchor="lm"
-        )
+        if aby.type == "Greedy":
+            if aby.floor == 10:
+                dr.text(
+                    xy=(938, 28),
+                    text=f"{aby.floor}层{aby.score:,}",
+                    fill="#0f9ed8",
+                    font=font_lxj_s,
+                    anchor="mm",
+                )
+            else:
+                # TODO: 缺少数据，临时处理
+                dr.text(
+                    xy=(938, 28),
+                    text=f"{aby.floor}层",
+                    fill="#0f9ed8",
+                    font=font_lxj,
+                    anchor="mm",
+                )
+        else:
+            dr.text(
+                (865, 28),
+                text=f"{aby.score:,}",
+                fill="#0f9ed8",
+                font=font_lxj,
+                anchor="lm",
+            )
         if aby.reward_type:
+            # 有reward_type表明是低级区深渊
             abylevel = aby.level
             timescond = aby.time_second
             dr.text(
@@ -309,7 +332,7 @@ async def draw_abyss(aby: AbyssReport) -> Image.Image:
             timescond = aby.updated_time_second
             dr.multiline_text(
                 xy=(600, 153),
-                text=f"段位: {ItemTrans.abyss_level(aby.settled_level)}\n排名: {str(aby.rank)}\n杯数: {str(aby.cup_number)}({str(aby.settled_cup_number)})",
+                text=f"段位: {ItemTrans.abyss_level(aby.settled_level)}\n排名: {str(aby.rank)}\n杯数: {aby.cup_number}({aby.settled_cup_number:+})",
                 fill="white",
                 font=font_wh65,
                 anchor="lm",
@@ -355,8 +378,6 @@ async def draw_battlefield(bfs: BattleFieldReport) -> List[Image.Image]:
                     Image.open(ItemTrans.star(bf.elf.star, 1)), 0.44
                 )
                 bg.alpha_composite(img_star, dest=(195, 523))
-            # font_lxj = ImageFont.truetype(os.path.join(os.path.dirname(
-            # __file__), "assets/font/HYLingXinTiJ.ttf"), size=48)
             dr.text(
                 xy=(170, 133),
                 text=f"{bf.score:,}",
@@ -391,8 +412,6 @@ class DrawIndex(FullInfo):
         font_8548 = myDraw.get_font("85", 48)
         font_6532 = myDraw.get_font(size=32)
         font_6524 = myDraw.get_font(size=24)
-        # bg = draw_text_center(bg,font,height=560,text=self.index.role.nickname,color=(133,96,61))
-        # draw = ImageDraw.Draw(bg)
         draw = myDraw(bg)
         draw.text(
             (1100, 20),
