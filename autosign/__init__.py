@@ -62,7 +62,7 @@ def save_data(data):
 
 
 def check_cookie(qid: str):
-    db = DB('uid.sqlite')
+    db = DB('uid.sqlite', tablename="qid_uid")
     cookie = db.get_cookie(qid)
     if not cookie:
         return f"自动签到需要绑定cookie,发送'bhf?'查看如何绑定."
