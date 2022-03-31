@@ -11,10 +11,8 @@ from typing import List, Optional, Union
 class Config(BaseModel):
     cookies: List[str]
     is_egenshin: bool
-    egenshin_dir: Optional[str]
+    egenshin_dir: Union[str, None]
     cache_dir: str
-    username: Optional[str]
-    password: Optional[str]
 
     @staticmethod
     def load_config() -> dict:
@@ -337,24 +335,3 @@ class FinanceInfo(BaseModel):
     index: findex
     getHcoinRecords: FinanceRecord
     getStarRecords: FinanceRecord
-
-
-class result(BaseModel):
-    """签到用"""
-    region:str
-    game_uid:str
-    nickname:str
-    level:int
-    region_name:str
-    total_sign_day:int
-    is_sign:bool
-    reward_day:int
-    reward_icon:str
-    reward_status:int
-    reward_name:str
-    reward_cnt:int
-    today:str
-    status:str
-    addons:str
-    sign_response:Optional[dict]
-    end:str
