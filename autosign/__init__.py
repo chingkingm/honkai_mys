@@ -47,6 +47,10 @@ SIGN_PATH = os.path.join(os.path.dirname(__file__), "./sign_on.json")
 
 
 def load_data():
+    if not os.path.exists(SIGN_PATH):
+        with open(SIGN_PATH, "w", encoding="utf8") as f:
+            json.dump({}, f)
+            return {}
     with open(SIGN_PATH, 'r', encoding="utf8") as f:
         data: dict = json.load(f)
         return data
