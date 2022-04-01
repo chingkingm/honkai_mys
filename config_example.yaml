@@ -4,11 +4,7 @@ cache_dir: ./data/
 is_egenshin: False
 # egenshin的uid.sqlite的绝对路径,例如C:\HoshinoBot\hoshino\modules\egenshin\data\uid.sqlite
 # 留空则默认为 somepath\hoshino\modules\egenshin\data\uid.sqlite
-egenshin_dir:
-# QQ邮箱用户名，选填
-username:
-# QQ邮箱授权码，选填
-password:
+egenshin_dir: 
 # 必填
 cookies:
   - your cookies

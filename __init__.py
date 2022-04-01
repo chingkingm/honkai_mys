@@ -1,37 +1,46 @@
 import re
-import sys
 
-from hoshino import HoshinoBot, MessageSegment, Service, get_bot
-from hoshino.typing import CQEvent
+from nonebot import on_command, on_regex
+from nonebot.adapters.onebot.v11 import (
+    GROUP,
+    PRIVATE_FRIEND,
+    Bot,
+    Event,
+    Message,
+    MessageSegment,
+)
+from nonebot.params import CommandArg, RegexGroup
 
 from .modules.database import DB
-from .modules.image_handle import (DrawCharacter, DrawFinance, DrawIndex,
-                                   ItemTrans)
-from .modules.mytyping import Index
 from .modules.query import Finance, GetInfo, InfoError
+from .modules.image_handle import DrawCharacter, DrawFinance, DrawIndex, ItemTrans
 from .modules.util import NotBindError
+from .modules.mytyping import Index
 
 _help = """
 [bh#uid服务器]：查询角色卡片
 [bhv#uid服务器]：查询拥有的女武神
 [bhf]：查询手账
 """
-_bot = get_bot()
-sv = Service(
-    "崩坏3角色卡片", enable_on_default=True, visible=True, bundle="崩坏3", help_=_help
-)
+get_player = on_command("bh#")
+get_valkyrie = on_command("bhv#")
+get_finance = on_command("bhf", aliases={"手账", "水晶手账"}, permission=GROUP)
+bind_cookie = on_regex(r"(bhf|(水晶)?手账)绑定(\d+),(\w+)",
+                       permission=PRIVATE_FRIEND)
 
 
-def handle_id(ev: CQEvent):
-    msg = ev.message.extract_plain_text().strip()
-    qid = str(ev.user_id)
-    for mes in ev.message:
-        if mes.type == "at":
-            qid = mes.data["qq"]
+def handle_id(ev: Event, msg: str):
+    msg = str(msg)
+    qid = str(ev.get_user_id())
     region_db = DB("uid.sqlite", tablename="uid_region")
     qid_db = DB("uid.sqlite", tablename="qid_uid")
     role_id = re.search(r"\d{1,}", msg)
     region_name = re.search(r"\D{1,}\d?", msg)
+    for mes in ev.get_message():
+        if mes.type == "at":
+            qid = mes.data["qq"]
+            role_id = None
+            break
     if re.search(r"[mM][yY][sS]|米游社", msg):
         spider = GetInfo(mysid=role_id.group())
         region_id, role_id = spider.mys2role(spider.getrole)
@@ -62,12 +71,12 @@ def handle_id(ev: CQEvent):
     return role_id, region_id, qid
 
 
-@sv.on_prefix("bh#")
-async def bh3_player_card(bot: HoshinoBot, ev: CQEvent):
+@get_player.handle()
+async def bh3_player_card(bot: Bot, ev: Event, args: Message = CommandArg()):
     region_db = DB("uid.sqlite", tablename="uid_region")
     qid_db = DB("uid.sqlite", tablename="qid_uid")
     try:
-        role_id, region_id, qid = handle_id(ev)
+        role_id, region_id, qid = handle_id(ev, args)
     except InfoError as e:
         await bot.send(ev, str(e), at_sender=True)
         return
@@ -85,12 +94,12 @@ async def bh3_player_card(bot: HoshinoBot, ev: CQEvent):
     await bot.send(ev, img)
 
 
-@sv.on_prefix("bhv#")
-async def bh3_chara_card(bot: HoshinoBot, ev: CQEvent):
+@get_valkyrie.handle()
+async def bh3_chara_card(bot: Bot, ev: Event, args: Message = CommandArg()):
     region_db = DB("uid.sqlite", tablename="uid_region")
     qid_db = DB("uid.sqlite", tablename="qid_uid")
     try:
-        role_id, region_id, qid = handle_id(ev)
+        role_id, region_id, qid = handle_id(ev, args)
     except InfoError as e:
         await bot.send(ev, str(e), at_sender=True)
         return
@@ -112,10 +121,10 @@ async def bh3_chara_card(bot: HoshinoBot, ev: CQEvent):
     return
 
 
-@sv.on_prefix(("bhf", "手账", "水晶手账"))
-async def show_finance(bot: HoshinoBot, ev: CQEvent):
-    qid = ev.user_id
-    msg = ev.message.extract_plain_text().strip()
+@get_finance.handle()
+async def show_finance(bot: Bot, ev: Event, args: Message = CommandArg()):
+    qid = ev.get_user_id()
+    msg = str(args)
     if msg.startswith("绑定"):
         try:
             await bot.delete_msg(message_id=ev.message_id)
@@ -141,27 +150,16 @@ async def show_finance(bot: HoshinoBot, ev: CQEvent):
     return
 
 
-@_bot.on_message("private")
-async def bindcookie(ev: CQEvent):
-    msg = ev["raw_message"]
-    sid = int(ev["self_id"])
-    qid = int(ev["sender"]["user_id"])
-    cmd = re.match(r"(bhf|手账|水晶手账)绑定", msg)
-    if not cmd:
-        return
-    sv.logger.info(
-        f"Private Message {ev.message_id} triggered {sys._getframe().f_code.co_name}"
-    )
-    cookieraw: str = re.split(cmd.group(), msg)[1].strip()
+@bind_cookie.handle()
+async def bindcookie(ev: Event, msg: list = RegexGroup()):
+    qid = ev.get_user_id()
+    cookieraw = f"{msg[2]},{msg[3]}"
+    print(cookieraw)
     try:
         spider = Finance(qid=qid, cookieraw=cookieraw)
     except InfoError as e:
-        await _bot.send_private_msg(user_id=qid, message=f"{e}", self_id=sid)
-        return
+        await bind_cookie.finish(message=f"{e}")
     fi = await spider.get_finance()
     fid = DrawFinance(**fi)
     im = fid.draw()
-    await _bot.send_private_msg(
-        user_id=qid, message=MessageSegment.image(im), self_id=sid
-    )
-    return
+    await bind_cookie.finish(message=MessageSegment.image(im))

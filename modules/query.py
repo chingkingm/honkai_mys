@@ -21,6 +21,7 @@ COOKIES = config.cookies[0]
 
 class MysApi(object):
     """用于生成api"""
+
     BASE = "https://api-takumi.mihoyo.com/game_record/app/honkai3rd/api"
     API = {
         "往事乐土": f"{BASE}/godWar?server={{serverid}}&role_id={{roleid}}",
@@ -38,7 +39,7 @@ class MysApi(object):
         "上月手账": f"https://api.mihoyo.com/bh3-weekly_finance/api/getLastMonthInfo?game_biz=bh3_cn&bind_uid={{roleid}}&bind_region={{serverid}}",
         "本月手账": f"https://api.mihoyo.com/bh3-weekly_finance/api/index?game_biz=bh3_cn&bind_uid={{roleid}}&bind_region={{serverid}}",
         "水晶明细": f"https://api.mihoyo.com/bh3-weekly_finance/api/getHcoinRecords?page=1&limit=20&game_biz=bh3_cn&bind_uid={{roleid}}&bind_region={{serverid}}",
-        "星石明细": f"https://api.mihoyo.com/bh3-weekly_finance/api/getStarRecords?page=1&limit=20&game_biz=bh3_cn&bind_uid={{roleid}}&bind_region={{serverid}}"
+        "星石明细": f"https://api.mihoyo.com/bh3-weekly_finance/api/getStarRecords?page=1&limit=20&game_biz=bh3_cn&bind_uid={{roleid}}&bind_region={{serverid}}",
     }
 
     def __init__(self, server_id, role_id, mysid=None) -> None:
@@ -61,11 +62,19 @@ class MysApi(object):
         self.weekly = self.generate("一周成绩单")
         self.battleField = self.generate("战场战报")
         self.getself = self.generate("获取自己角色")
-        self._for_iter = [self.godWar, self.valkyrie, self.index, self.newAbyss, self.oldAbyss_lastest, self.weekly, self.battleField]
+        self._for_iter = [
+            self.godWar,
+            self.valkyrie,
+            self.index,
+            self.newAbyss,
+            self.oldAbyss_lastest,
+            self.weekly,
+            self.battleField,
+        ]
 
     def generate(self, typename: str, *ids) -> str:
         """typename:URL类型;ids:3种id"""
-        #todo: change *ids to details
+        # todo: change *ids to details
         url_origin = self.API[typename]
         if len(ids) == 2:
             sid = ids[0]
@@ -87,9 +96,12 @@ class MysApi(object):
 
 class GetInfo(MysApi):
     """继承自MysApi,用于获取信息"""
-    MHY_VERSION = '2.11.1'
 
-    def __init__(self, mysid: str = None, server_id: str = None, role_id: str = None) -> None:
+    MHY_VERSION = "2.11.1"
+
+    def __init__(
+        self, mysid: str = None, server_id: str = None, role_id: str = None
+    ) -> None:
         """若传入mysid则server_id及role_id不生效."""
         if mysid is not None:
             try:
@@ -148,27 +160,27 @@ class GetInfo(MysApi):
     @classmethod
     def gen_header(cls, ds: str, cookie: str):
         headers = {
-            'DS': cls.DSGet(ds),
-            'x-rpc-app_version': cls.MHY_VERSION,
-            'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) miHoYoBBS/2.11.1',
-            'x-rpc-client_type': '5',
-            'Referer': 'https://webstatic.mihoyo.com/',
-            "Cookie": cookie
+            "DS": cls.DSGet(ds),
+            "x-rpc-app_version": cls.MHY_VERSION,
+            "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) miHoYoBBS/2.11.1",
+            "x-rpc-client_type": "5",
+            "Referer": "https://webstatic.mihoyo.com/",
+            "Cookie": cookie,
         }
         return headers
 
     @staticmethod
-    @cache(ttl=datetime.timedelta(minutes=10), arg_key='url')
+    @cache(ttl=datetime.timedelta(minutes=10), arg_key="url")
     async def fetch(url, cookie=None) -> Tuple[str, dict]:
         """查询，单项数据"""
         cookie = cookie if cookie is not None else COOKIES
         try:
-            server, uid = [temp[1:] for temp in re.findall(r'=[a-z0-9]{4,}', url)]
+            server, uid = [temp[1:] for temp in re.findall(r"=[a-z0-9]{4,}", url)]
             headers = GetInfo.gen_header("role_id=" + uid + "&server=" + server, cookie)
             item = re.search(r"/\w+\?", url).group()[1:-1]
         except ValueError:
             # raise ValueError(f"{url}\napi格式不对")
-            headers = GetInfo.gen_header('', cookie)
+            headers = GetInfo.gen_header("", cookie)
             item = url.split("/")[-1]
         """高级区及以下的深渊查询api不可用,使用latest代替"""
         async with httpx.AsyncClient() as aiorequests:
@@ -197,14 +209,11 @@ class GetInfo(MysApi):
     def mys2role(cls, url) -> Tuple[str, str]:
         """通过米游社id查询游戏角色"""
         try:
-            mid = re.search(r'\?\w+=\d+', url).group()[1:]
+            mid = re.search(r"\?\w+=\d+", url).group()[1:]
         except ValueError:
             raise ValueError(f"api格式不对")
         item = re.search(r"/\w+\?", url).group()[1:-1]
-        req = httpx.get(
-            url=url,
-            headers=cls.gen_header(mid, COOKIES)
-        )
+        req = httpx.get(url=url, headers=cls.gen_header(mid, COOKIES))
         data = json.loads(req.text)
         for game in data["data"]["list"]:
             if game["game_id"] == 1:
@@ -220,7 +229,7 @@ FINANCE_CACHE = {}
 
 class Finance(GetInfo):
     def get_role(self, all: bool = False):
-        url = 'https://api-takumi.mihoyo.com/binding/api/getUserGameRolesByCookie'
+        url = "https://api-takumi.mihoyo.com/binding/api/getUserGameRolesByCookie"
         if not all:
             url = url + "?game_biz=bh3_cn"
         resp = httpx.get(url=url, headers=self.gen_header("", self.cookie.strip()))
@@ -236,7 +245,9 @@ class Finance(GetInfo):
             raise InfoError(f"{resp.text}\n当前绑定的账号没有崩坏3游戏信息")
         server_id = data["region"]
         role_id = data["game_uid"]
-        FINANCE_CACHE.update({self.account_id: {"server_id": server_id, "role_id": role_id}})
+        FINANCE_CACHE.update(
+            {self.account_id: {"server_id": server_id, "role_id": role_id}}
+        )
         return server_id, role_id
 
     def __init__(self, qid: str, cookieraw: str = None) -> None:
@@ -244,8 +255,10 @@ class Finance(GetInfo):
         self.db = DB("uid.sqlite", "qid_uid")
         if cookieraw is not None:
             cookietemp = SimpleCookie()
-            cookietemp.load(dict(zip(['account_id', 'cookie_token'], cookieraw.split(','))))
-            self.cookie = cookietemp.output(header='', sep=';').strip()
+            cookietemp.load(
+                dict(zip(["account_id", "cookie_token"], cookieraw.split(",")))
+            )
+            self.cookie = cookietemp.output(header="", sep=";").strip()
         else:
             cookie = self.db.get_cookie(qid)
             if cookie is None:
@@ -274,7 +287,7 @@ class Finance(GetInfo):
         return financedata
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # spider = GetInfo(mysid='19846523')
     spider = Finance(qid="1542292829")
     # 1551044405
@@ -284,6 +297,10 @@ if __name__ == '__main__':
         print(data)
     except InfoError as e:
         print(e)
-    with open(os.path.join(os.path.dirname(__file__), f"dist/financech.json"), 'w', encoding='utf8') as f:
+    with open(
+        os.path.join(os.path.dirname(__file__), f"dist/financech.json"),
+        "w",
+        encoding="utf8",
+    ) as f:
         json.dump(data, f, indent=4, ensure_ascii=False)
         f.close()
