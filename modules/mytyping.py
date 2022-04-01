@@ -13,11 +13,13 @@ class Config(BaseModel):
     is_egenshin: bool
     egenshin_dir: Union[str, None]
     cache_dir: str
+    username: Optional[str]
+    password: Optional[str]
 
     @staticmethod
     def load_config() -> dict:
         with open(
-                os.path.join(os.path.dirname(__file__),"../", "config.yaml"),
+                os.path.join(os.path.dirname(__file__), "../", "config.yaml"),
                 mode="r",
                 encoding="utf8",
         ) as f:
@@ -151,7 +153,7 @@ class AbyssReport(BaseModel):
     level: Union[int, str]  # 段位
     settled_level: Optional[int]    # 终极区深渊结算后段位
     reward_type: Optional[str]  # 低级深渊升降级
-    type: Optional[str] # 量子奇点|量子流形
+    type: Optional[str]  # 量子奇点|量子流形
     floor: Optional[int]    # 量子流形层数，量子奇点为0
 
 
@@ -335,3 +337,24 @@ class FinanceInfo(BaseModel):
     index: findex
     getHcoinRecords: FinanceRecord
     getStarRecords: FinanceRecord
+
+
+class result(BaseModel):
+    """签到用"""
+    region: str
+    game_uid: str
+    nickname: str
+    level: int
+    region_name: str
+    total_sign_day: int
+    is_sign: bool
+    reward_day: int
+    reward_icon: str
+    reward_status: int
+    reward_name: str
+    reward_cnt: int
+    today: str
+    status: str
+    addons: str
+    sign_response: Optional[dict]
+    end: str
