@@ -1,3 +1,4 @@
+import asyncio
 import json
 import os
 from datetime import datetime
@@ -131,6 +132,7 @@ async def schedule_sign():
     today = datetime.today().day
     sign_data = load_data()
     for qid in sign_data:
+        asyncio.sleep(5)
         if sign_data[qid].get("date") != today or not sign_data[qid].get("status"):
             hk3 = check_cookie(qid)
             if isinstance(hk3, Honkai3rd):
