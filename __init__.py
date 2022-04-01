@@ -46,7 +46,8 @@ def handle_id(ev: CQEvent):
     elif role_id is not None and region_name is None:
         region_id = region_db.get_region(role_id.group())
         if not region_id:
-            raise InfoError(f"{role_id.group()}为首次查询,请输入服务器名称.如:bh#100074751官服")
+            raise InfoError(
+                f"{role_id.group()}为首次查询,请输入服务器名称.如:bh#100074751官服")
     else:
         try:
             region_id = ItemTrans.server2id(region_name.group())
@@ -151,7 +152,7 @@ async def bindcookie(ev: CQEvent):
     sv.logger.info(
         f"Private Message {ev.message_id} triggered {sys._getframe().f_code.co_name}"
     )
-    cookieraw = re.split(cmd.group(), msg)[1]
+    cookieraw: str = re.split(cmd.group(), msg)[1].strip()
     try:
         spider = Finance(qid=qid, cookieraw=cookieraw)
     except InfoError as e:
