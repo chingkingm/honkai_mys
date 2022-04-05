@@ -127,6 +127,7 @@ class ItemTrans(object):
         if isinstance(no, str) and no.startswith("Unknown"):
             return f"无数据"
         level = {
+            0: "未战斗",
             1: "禁忌",
             2: "原罪Ⅰ",
             3: "原罪Ⅱ",
