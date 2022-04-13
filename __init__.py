@@ -77,12 +77,13 @@ async def bh3_player_card(bot: HoshinoBot, ev: CQEvent):
     except InfoError as e:
         await bot.send(ev, str(e))
         return
+    await bot.send(ev, MessageSegment.reply(ev.message_id) + "制图中，请稍后")
     region_db.set_region(role_id, region_id)
     qid_db.set_uid_by_qid(qid, role_id)
     ind = DrawIndex(**ind)
     im = await ind.draw_card(qid)
     img = MessageSegment.image(im)
-    await bot.send(ev, img)
+    await bot.send(ev, img, at_sender=True)
 
 
 @sv.on_prefix("bhv#")
