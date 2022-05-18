@@ -21,7 +21,7 @@ COOKIES = config.cookies[0]
 
 class MysApi(object):
     """用于生成api"""
-    BASE = "https://api-takumi.mihoyo.com/game_record/app/honkai3rd/api"
+    BASE = "https://api-takumi-record.mihoyo.com/game_record/app/honkai3rd/api"
     API = {
         "往事乐土": f"{BASE}/godWar?server={{serverid}}&role_id={{roleid}}",
         "我的女武神": f"{BASE}/characters?server={{serverid}}&role_id={{roleid}}",
