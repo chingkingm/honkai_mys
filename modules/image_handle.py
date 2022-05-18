@@ -40,9 +40,13 @@ class myDraw(ImageDraw.ImageDraw):
         if avatar_url is not None:
             try:
                 no = re.search(r"\d{3,}", avatar_url).group()
+                a_url = avatar_url.split(no)[0] + no + ".png"
             except:
-                no = re.search(r"[a-zA-Z]{1,}\d{2}", avatar_url).group()
-            a_url = avatar_url.split(no)[0] + no + ".png"
+                try:
+                    no = re.search(r"[a-zA-Z]{1,}\d{2}", avatar_url).group()
+                    a_url = avatar_url.split(no)[0] + no + ".png"
+                except:
+                    a_url = "https://upload-bbs.mihoyo.com/game_record/honkai3rd/all/SpriteOutput/AvatarIcon/705.png"
         else:
             a_url = qava_url.format(qid=qid)
         pic_data = await cls.get_net_img(url=a_url)
