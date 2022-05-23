@@ -1,8 +1,8 @@
 import re
 import sys
 
-from hoshino import HoshinoBot, MessageSegment, Service, get_bot
-from hoshino.typing import CQEvent
+from hoshino import HoshinoBot, Service, get_bot
+from hoshino.typing import CQEvent, MessageSegment
 
 from .modules.database import DB
 from .modules.image_handle import (DrawCharacter, DrawFinance, DrawIndex,

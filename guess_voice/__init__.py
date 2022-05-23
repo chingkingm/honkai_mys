@@ -3,8 +3,8 @@ import os
 import random
 import re
 
-from hoshino import HoshinoBot, MessageSegment, Service, priv
-from hoshino.typing import CQEvent
+from hoshino import HoshinoBot, Service, priv
+from hoshino.typing import CQEvent, MessageSegment
 from hoshino.util import FreqLimiter
 
 from .game import GameSession

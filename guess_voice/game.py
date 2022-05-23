@@ -5,7 +5,8 @@ from datetime import datetime, timedelta
 from shutil import copy
 
 from apscheduler.triggers.date import DateTrigger
-from hoshino import MessageSegment, get_bot
+from hoshino import get_bot
+from hoshino.typing import MessageSegment
 from nonebot import scheduler
 
 # from apscheduler.schedulers.asyncio import AsyncIOScheduler
