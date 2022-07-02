@@ -8,18 +8,10 @@ from operator import attrgetter
 from typing import List, Tuple, Union
 
 from httpx import AsyncClient
-from PIL import Image, ImageChops, ImageDraw, ImageFont
+from PIL import Image, ImageChops, ImageDraw, ImageFont, UnidentifiedImageError
 
-from .mytyping import (
-    AbyssReport,
-    BattleFieldReport,
-    Character,
-    FinanceInfo,
-    FullInfo,
-    Index,
-    _stigamata,
-    _weapon,
-)
+from .mytyping import (AbyssReport, BattleFieldReport, Character, FinanceInfo,
+                       FullInfo, Index, _stigamata, _weapon)
 from .util import ItemTrans
 
 
@@ -53,7 +45,11 @@ class myDraw(ImageDraw.ImageDraw):
         with Image.open(
             os.path.join(os.path.dirname(__file__), "../assets/404.png")
         ) as img_404:
-            if ImageChops.difference(img_404, Image.open(pic_data)).getbbox() is None:
+            try:
+                im_temp = Image.open(pic_data)
+            except UnidentifiedImageError:
+                im_temp = img_404
+            if not ImageChops.difference(img_404, im_temp).getbbox():
                 pic_data = await cls.get_net_img(url=qava_url.format(qid=qid))
         with Image.open(pic_data) as pic:
             pic = cls.ImgResize(pic, 256 / pic.width).convert("RGBA")
