@@ -341,20 +341,21 @@ class FinanceInfo(BaseModel):
 
 class result(BaseModel):
     """签到用"""
-    region: str
-    game_uid: str
-    nickname: str
-    level: int
-    region_name: str
-    total_sign_day: int
-    is_sign: bool
-    reward_day: int
-    reward_icon: str
-    reward_status: int
-    reward_name: str
-    reward_cnt: int
-    today: str
-    status: str
-    addons: str
-    sign_response: Optional[dict]
-    end: str
+    region:str
+    game_uid:str
+    nickname:str
+    level:int
+    region_name:str
+    total_sign_day:int
+    is_sign:bool
+    reward_total_sign_day:int
+    reward_today:str
+    icon:str
+    name:str
+    cnt:int
+    reward_sign_cnt_missed:int
+    today:str
+    status:str
+    addons:str
+    sign_response:Optional[dict]
+    end:str

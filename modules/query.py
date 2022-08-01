@@ -34,7 +34,7 @@ class MysApi(object):
         "一周成绩单": f"{BASE}/weeklyReport?server={{serverid}}&role_id={{roleid}}",
         "战场战报": f"{BASE}/battleFieldReport?server={{serverid}}&role_id={{roleid}}",
         "常用工具": f"{BASE}/tools",
-        "获取自己角色": "https://api-takumi.mihoyo.com/binding/api/getUserGameRolesByCookie",
+        "获取自己角色": "https://api-takumi-record.mihoyo.com/binding/api/getUserGameRolesByCookie",
         "获取他人角色": f"https://api-takumi-record.mihoyo.com/game_record/app/card/wapi/getGameRecordCard?uid={{mysuid}}",
         "上月手账": f"https://api.mihoyo.com/bh3-weekly_finance/api/getLastMonthInfo?game_biz=bh3_cn&bind_uid={{roleid}}&bind_region={{serverid}}",
         "本月手账": f"https://api.mihoyo.com/bh3-weekly_finance/api/index?game_biz=bh3_cn&bind_uid={{roleid}}&bind_region={{serverid}}",
@@ -285,22 +285,3 @@ class Finance(GetInfo):
             item, data = await self.fetch(url, self.cookie)
             financedata.update({item: data["data"]})
         return financedata
-
-
-if __name__ == "__main__":
-    # spider = GetInfo(mysid='19846523')
-    spider = Finance(qid="1542292829")
-    # 1551044405
-    # spider = GetInfo(server_id='bb01',role_id='112854881')
-    try:
-        data = asyncio.run(spider.get_finance())
-        print(data)
-    except InfoError as e:
-        print(e)
-    with open(
-        os.path.join(os.path.dirname(__file__), f"dist/financech.json"),
-        "w",
-        encoding="utf8",
-    ) as f:
-        json.dump(data, f, indent=4, ensure_ascii=False)
-        f.close()
