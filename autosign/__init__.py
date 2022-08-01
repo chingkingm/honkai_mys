@@ -24,8 +24,6 @@ def autosign(hk3: Honkai3rd_edit, qid: str):
     sign_data = load_data()
     today = datetime.today().day
     qdata = sign_data.get(qid)
-    if qdata["date"] == today and qdata["status"] == True:
-        return f"舰长,你今天已经签到过了哦👻"
     try:
         result_list = hk3.sign_more()
     except Exception as e:
