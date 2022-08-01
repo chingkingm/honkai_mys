@@ -1,7 +1,7 @@
 import asyncio
 import json
 import os
-from datetime import datetime, timedelta
+from datetime import datetime
 from email.header import Header
 from email.mime.text import MIMEText
 from email.utils import formataddr, parseaddr
@@ -22,26 +22,26 @@ _bot = sv.bot
 
 def autosign(hk3: Honkai3rd_edit, qid: str):
     sign_data = load_data()
+    today = datetime.today().day
+    qdata = sign_data.get(qid)
+    if qdata["date"] == today and qdata["status"] == True:
+        return f"舰长,你今天已经签到过了哦👻"
     try:
         result_list = hk3.sign_more()
-    except GenshinHelperException as e:
-        sign_data.update(
-            {qid: {"date": datetime.today().day, "status": False, "result": None}}
-        )
+    except Exception as e:
+        sign_data.update({qid: {"date": today, "status": False, "result": None}})
         return f"{e}\n自动签到失败."
     ret_list = f"〓米游社崩坏3签到〓\n####{datetime.date(datetime.today())}####\n"
     for n, res in enumerate(result_list):
         res = result(**res)
-        ret = f"🎉No.{n+1}\n{res.region_name}-{res.nickname}\n今日奖励:{res.name}*{res.cnt}\n本月累签:{res.total_sign_day}天\n签到结果:"
+        ret = f"🎉No.{n+1}\n{res.region_name}-{res.nickname}\n今日奖励:{res.name}*{res.cnt}\n本月累签:{res.reward_total_sign_day}天\n签到结果:"
         if res.status == "OK":
             ret += f"OK✨"
         else:
             ret += f"舰长,你今天已经签到过了哦👻"
         ret += "\n###############\n"
         ret_list += ret
-    sign_data.update(
-        {qid: {"date": datetime.today().day, "status": True, "result": ret_list}}
-    )
+    sign_data.update({qid: {"date": today, "status": True, "result": ret_list}})
     save_data(sign_data)
     return ret_list.strip()
 
@@ -152,9 +152,10 @@ async def schedule_sign():
 async def reload_sign(bot: HoshinoBot, ev: CQEvent):
     if not priv.check_priv(ev, priv.SUPERUSER):
         return
+    await bot.send(ev, f"开始重执行。", at_sender=True)
     cnt, sum = await schedule_sign()
     await bot.send(
         ev,
-        f"重执行完成，成功{cnt}条，共{sum}条",
+        f"重执行完成，状态刷新{cnt}条，共{sum}条",
         at_sender=True,
     )
