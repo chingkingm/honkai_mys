@@ -5,17 +5,16 @@ from datetime import datetime, timedelta
 from shutil import copy
 
 from apscheduler.triggers.date import DateTrigger
-from hoshino import get_bot
-from hoshino.typing import MessageSegment
-from nonebot import scheduler
+from nonebot import require
+from nonebot.adapters.onebot.v11 import Bot, MessageSegment
 
-# from apscheduler.schedulers.asyncio import AsyncIOScheduler
-# scheduler = AsyncIOScheduler()
+scheduler = require("nonebot_plugin_apscheduler").scheduler
 game_record = {}
-bot = get_bot()
 
 
 class GameSession:
+    bot: Bot
+
     @staticmethod
     def __load__(file: str = "record.json"):
         file = os.path.join(os.path.dirname(__file__), file)
@@ -25,7 +24,8 @@ class GameSession:
                     f.write("{}")
             elif file.endswith("answer.json"):
                 copy(
-                    os.path.join(os.path.dirname(__file__), "answer_template.json"),
+                    os.path.join(os.path.dirname(__file__),
+                                 "answer_template.json"),
                     file,
                 )
         with open(file, "r", encoding="utf8") as li:
@@ -45,7 +45,8 @@ class GameSession:
         self.begin = datetime.now()
         self.end = self.begin + timedelta(seconds=duration)
         try:
-            self.chara, vlist = random.choice(list(self.voice_list[difficulty].items()))
+            self.chara, vlist = random.choice(
+                list(self.voice_list[difficulty].items()))
         except KeyError:
             return f"语音列表未生成或有错误，请先发送‘更新崩坏3语音列表’来更新"
         self.voice = random.choice(vlist)
@@ -64,10 +65,10 @@ class GameSession:
         )
         record_path = f"file:///{os.path.join(os.path.dirname(__file__),'../assets/record',self.voice['voice_path'])}"
         print(self.answer)
-        await bot.send_group_msg(
+        await self.bot.send_group_msg(
             group_id=self.group_id, message=f"即将发送一段崩坏3语音，将在{duration}后公布答案。"
         )
-        return f"{MessageSegment.record(record_path)}"
+        return MessageSegment.record(record_path)
 
     @property
     def answer(self) -> list:
@@ -88,7 +89,7 @@ class GameSession:
         else:
             ret_msg = f"回答正确的人：{MessageSegment.at(ok_player)}"
         ret_msg = f"正确答案是：{self.chara}\n{ret_msg}"
-        await bot.send_group_msg(group_id=self.group_id, message=ret_msg)
+        await self.bot.send_group_msg(group_id=self.group_id, message=ret_msg)
         game_record[self.group_id] = {}
 
     async def check_answer(self, ans: str, qid: int):

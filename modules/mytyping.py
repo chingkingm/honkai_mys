@@ -11,7 +11,7 @@ from typing import List, Optional, Union
 class Config(BaseModel):
     cookies: List[str]
     is_egenshin: bool
-    egenshin_dir: Optional[str]
+    egenshin_dir: Union[str, None]
     cache_dir: str
     username: Optional[str]
     password: Optional[str]
@@ -19,7 +19,7 @@ class Config(BaseModel):
     @staticmethod
     def load_config() -> dict:
         with open(
-                os.path.join(os.path.dirname(__file__),"../", "config.yaml"),
+                os.path.join(os.path.dirname(__file__), "../", "config.yaml"),
                 mode="r",
                 encoding="utf8",
         ) as f:
@@ -153,7 +153,7 @@ class AbyssReport(BaseModel):
     level: Union[int, str]  # 段位
     settled_level: Optional[int]    # 终极区深渊结算后段位
     reward_type: Optional[str]  # 低级深渊升降级
-    type: Optional[str] # 量子奇点|量子流形
+    type: Optional[str]  # 量子奇点|量子流形
     floor: Optional[int]    # 量子流形层数，量子奇点为0
 
 

@@ -7,17 +7,22 @@ from email.mime.text import MIMEText
 from email.utils import formataddr, parseaddr
 from smtplib import SMTP_SSL
 
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from genshinhelper.exceptions import GenshinHelperException
-from hoshino import Service, priv
-from hoshino.config import SUPERUSERS
-from hoshino.typing import CQEvent, HoshinoBot, MessageSegment
+from nonebot import get_bot, get_driver, on_fullmatch, on_regex, require
+from nonebot.adapters.onebot.v11 import GROUP, Bot, Event, MessageSegment
+from nonebot.params import RegexGroup
+from nonebot.permission import SUPERUSER
 
 from ..modules.database import DB
 from ..modules.mytyping import config, result
 from .mysign import Honkai3rd_edit
 
-sv = Service("崩坏3米游社签到")
-_bot = sv.bot
+sign_schedule: AsyncIOScheduler = require(
+    "nonebot_plugin_apscheduler").scheduler
+sign_trigger = on_regex(
+    r"(开启|关闭|on|off)?\s?(?:崩坏?|bh|bbb|崩崩崩)(?:3|三)?自动签到")
+SUPERUSERS = get_driver().config.superusers
 
 
 def autosign(hk3: Honkai3rd_edit, qid: str):
@@ -77,11 +82,13 @@ def check_cookie(qid: str):
     return hk3
 
 
-@sv.on_rex(r"(开启|关闭|on|off)?\s?(?:崩坏?|bh|bbb|崩崩崩)(?:3|三)?自动签到")
-async def switch_autosign(bot: HoshinoBot, ev: CQEvent):
+# @sv.on_rex(r"(开启|关闭|on|off)?\s?(?:崩坏?|bh|bbb|崩崩崩)(?:3|三)?自动签到")
+@sign_trigger.handle()
+async def switch_autosign(bot: Bot, ev: Event, match: tuple = RegexGroup()):
     """自动签到开关"""
-    qid = str(ev.user_id)
-    cmd: str = ev["match"].group(1)
+    qid = ev.get_user_id()
+    # cmd: str = ev['match'].group(1)
+    cmd: str = match[0]
     sign_data = load_data()
     if cmd in ["off", "关闭"]:
         if not qid in sign_data:
@@ -107,17 +114,17 @@ def _format_addr(s):
     return formataddr((Header(name, "utf8").encode(), addr))
 
 
-async def send_notice(qid: str, context: str, bot: HoshinoBot = _bot):
+async def send_notice(qid: str, context: str, bot: Bot = None):
+    if not bot:
+        bot = get_bot()
     friend_list = await bot.get_friend_list()
     if qid in [str(friend.get("user_id")) for friend in friend_list]:
-        await bot.send_private_msg(user_id=qid, message=MessageSegment.text(context))
+        await bot.send_private_msg(user_id=int(qid), message=MessageSegment.text(context))
         return
     user = config.username
     password = config.password
     if not user or not password:
-        await bot.send_private_msg(
-            user_id=SUPERUSERS[0], message=MessageSegment.text(context)
-        )
+        await bot.send_private_msg(user_id=int(SUPERUSERS[0]), message=MessageSegment.text(context))
         return
     msg = MIMEText(context, "plain", _charset="utf-8")
     msg["Subject"] = Header(f"签到结果", "utf8").encode()
@@ -129,7 +136,7 @@ async def send_notice(qid: str, context: str, bot: HoshinoBot = _bot):
         smtp.sendmail(user, f"{qid}@qq.com", msg=msg.as_string())
 
 
-@sv.scheduled_job("cron", hour="4-10", minute="10,40")
+@sign_schedule.scheduled_job('cron', hour='4,16', minute='10')
 async def schedule_sign():
     today = datetime.today().day
     sign_data = load_data()
@@ -146,10 +153,8 @@ async def schedule_sign():
     return cnt, sum
 
 
-@sv.on_fullmatch("重载崩坏3自动签到")
-async def reload_sign(bot: HoshinoBot, ev: CQEvent):
-    if not priv.check_priv(ev, priv.SUPERUSER):
-        return
+# @reload.handle()
+async def reload_sign(bot: Bot, ev: Event):
     await bot.send(ev, f"开始重执行。", at_sender=True)
     cnt, sum = await schedule_sign()
     await bot.send(

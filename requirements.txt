@@ -1,6 +1,0 @@
-Pillow<9.2.0
-pydantic
-PyYAML
-httpx
-sqlitedict
-genshinhelper~=2.0.4
