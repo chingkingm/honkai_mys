@@ -73,3 +73,11 @@ class Honkai3rd_edit(Honkai3rd):
             award = month_awards[0][res["total_sign_day"] - 1]
             res.update(award)
         return result
+    def get_current_reward(self, total_sign_day: int, is_sign: bool = False):
+        rewards_info = self.rewards_info
+        if isinstance(rewards_info[0], list):
+            rewards_info = rewards_info[0]
+        total_sign_day = 0
+
+        raw_current_reward = rewards_info[total_sign_day]
+        return {'reward_' + k: v for k, v in raw_current_reward.items()}

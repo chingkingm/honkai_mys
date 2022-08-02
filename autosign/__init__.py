@@ -8,6 +8,7 @@ from email.utils import formataddr, parseaddr
 from smtplib import SMTP_SSL
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from genshinhelper import Honkai3rd
 from genshinhelper.exceptions import GenshinHelperException
 from nonebot import get_bot, get_driver, on_fullmatch, on_regex, require
 from nonebot.adapters.onebot.v11 import GROUP, Bot, Event, MessageSegment
@@ -16,7 +17,6 @@ from nonebot.permission import SUPERUSER
 
 from ..modules.database import DB
 from ..modules.mytyping import config, result
-from .mysign import Honkai3rd_edit
 
 sign_schedule: AsyncIOScheduler = require(
     "nonebot_plugin_apscheduler").scheduler
@@ -25,19 +25,18 @@ sign_trigger = on_regex(
 SUPERUSERS = get_driver().config.superusers
 
 
-def autosign(hk3: Honkai3rd_edit, qid: str):
+def autosign(hk3: Honkai3rd, qid: str):
     sign_data = load_data()
     today = datetime.today().day
-    qdata = sign_data.get(qid)
     try:
-        result_list = hk3.sign_more()
+        result_list = hk3.sign()
     except Exception as e:
         sign_data.update({qid: {"date": today, "status": False, "result": None}})
         return f"{e}\n自动签到失败."
     ret_list = f"〓米游社崩坏3签到〓\n####{datetime.date(datetime.today())}####\n"
     for n, res in enumerate(result_list):
         res = result(**res)
-        ret = f"🎉No.{n+1}\n{res.region_name}-{res.nickname}\n今日奖励:{res.name}*{res.cnt}\n本月累签:{res.reward_total_sign_day}天\n签到结果:"
+        ret = f"🎉No.{n+1}\n{res.region_name}-{res.nickname}\n今日奖励:{res.reward_name}*{res.reward_cnt}\n本月累签:{res.total_sign_day}天\n签到结果:"
         if res.status == "OK":
             ret += f"OK✨"
         else:
@@ -72,7 +71,7 @@ def check_cookie(qid: str):
     cookie = db.get_cookie(qid)
     if not cookie:
         return f"自动签到需要绑定cookie,发送'bhf?'查看如何绑定."
-    hk3 = Honkai3rd_edit(cookie=cookie)
+    hk3 = Honkai3rd(cookie=cookie)
     try:
         role_info = hk3.roles_info
     except GenshinHelperException as e:
@@ -146,7 +145,7 @@ async def schedule_sign():
         await asyncio.sleep(5)
         if sign_data[qid].get("date") != today or not sign_data[qid].get("status"):
             hk3 = check_cookie(qid)
-            if isinstance(hk3, Honkai3rd_edit):
+            if isinstance(hk3, Honkai3rd):
                 hk3 = autosign(hk3, qid)
                 cnt += 1
             await send_notice(qid, hk3)
@@ -156,7 +155,10 @@ async def schedule_sign():
 # @reload.handle()
 async def reload_sign(bot: Bot, ev: Event):
     await bot.send(ev, f"开始重执行。", at_sender=True)
-    cnt, sum = await schedule_sign()
+    try:
+        cnt, sum = await schedule_sign()
+    except:
+        res = await schedule_sign()
     await bot.send(
         ev,
         f"重执行完成，状态刷新{cnt}条，共{sum}条",
