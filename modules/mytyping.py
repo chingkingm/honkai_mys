@@ -348,12 +348,15 @@ class result(BaseModel):
     region_name:str
     total_sign_day:int
     is_sign:bool
-    reward_total_sign_day:int
-    reward_today:str
-    icon:str
-    name:str
-    cnt:int
-    reward_sign_cnt_missed:int
+    reward_icon:str
+    reward_name:str
+    reward_cnt:int
+    # reward_total_sign_day:int
+    # reward_today:str
+    # icon:str
+    # name:str
+    # cnt:int
+    # reward_sign_cnt_missed:int
     today:str
     status:str
     addons:str

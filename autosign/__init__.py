@@ -7,32 +7,32 @@ from email.mime.text import MIMEText
 from email.utils import formataddr, parseaddr
 from smtplib import SMTP_SSL
 
+from genshinhelper import Honkai3rd
 from genshinhelper.exceptions import GenshinHelperException
+from loguru import logger
 from hoshino import Service, priv
 from hoshino.config import SUPERUSERS
 from hoshino.typing import CQEvent, HoshinoBot, MessageSegment
 
 from ..modules.database import DB
 from ..modules.mytyping import config, result
-from .mysign import Honkai3rd_edit
 
 sv = Service("崩坏3米游社签到")
 _bot = sv.bot
 
 
-def autosign(hk3: Honkai3rd_edit, qid: str):
+def autosign(hk3: Honkai3rd, qid: str):
     sign_data = load_data()
     today = datetime.today().day
-    qdata = sign_data.get(qid)
     try:
-        result_list = hk3.sign_more()
+        result_list = hk3.sign()
     except Exception as e:
         sign_data.update({qid: {"date": today, "status": False, "result": None}})
         return f"{e}\n自动签到失败."
     ret_list = f"〓米游社崩坏3签到〓\n####{datetime.date(datetime.today())}####\n"
     for n, res in enumerate(result_list):
         res = result(**res)
-        ret = f"🎉No.{n+1}\n{res.region_name}-{res.nickname}\n今日奖励:{res.name}*{res.cnt}\n本月累签:{res.reward_total_sign_day}天\n签到结果:"
+        ret = f"🎉No.{n+1}\n{res.region_name}-{res.nickname}\n今日奖励:{res.reward_name}*{res.reward_cnt}\n本月累签:{res.total_sign_day}天\n签到结果:"
         if res.status == "OK":
             ret += f"OK✨"
         else:
@@ -67,7 +67,7 @@ def check_cookie(qid: str):
     cookie = db.get_cookie(qid)
     if not cookie:
         return f"自动签到需要绑定cookie,发送'bhf?'查看如何绑定."
-    hk3 = Honkai3rd_edit(cookie=cookie)
+    hk3 = Honkai3rd(cookie=cookie)
     try:
         role_info = hk3.roles_info
     except GenshinHelperException as e:
@@ -139,7 +139,7 @@ async def schedule_sign():
         await asyncio.sleep(5)
         if sign_data[qid].get("date") != today or not sign_data[qid].get("status"):
             hk3 = check_cookie(qid)
-            if isinstance(hk3, Honkai3rd_edit):
+            if isinstance(hk3, Honkai3rd):
                 hk3 = autosign(hk3, qid)
                 cnt += 1
             await send_notice(qid, hk3)
@@ -151,7 +151,11 @@ async def reload_sign(bot: HoshinoBot, ev: CQEvent):
     if not priv.check_priv(ev, priv.SUPERUSER):
         return
     await bot.send(ev, f"开始重执行。", at_sender=True)
-    cnt, sum = await schedule_sign()
+    try:
+        cnt, sum = await schedule_sign()
+    except:
+        res = await schedule_sign()
+        logger.debug(res)
     await bot.send(
         ev,
         f"重执行完成，状态刷新{cnt}条，共{sum}条",
