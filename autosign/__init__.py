@@ -9,7 +9,6 @@ from smtplib import SMTP_SSL
 
 from genshinhelper import Honkai3rd
 from genshinhelper.exceptions import GenshinHelperException
-from loguru import logger
 from hoshino import Service, priv
 from hoshino.config import SUPERUSERS
 from hoshino.typing import CQEvent, HoshinoBot, MessageSegment
@@ -155,7 +154,6 @@ async def reload_sign(bot: HoshinoBot, ev: CQEvent):
         cnt, sum = await schedule_sign()
     except:
         res = await schedule_sign()
-        logger.debug(res)
     await bot.send(
         ev,
         f"重执行完成，状态刷新{cnt}条，共{sum}条",
