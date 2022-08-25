@@ -3,4 +3,4 @@ pydantic
 PyYAML
 httpx
 sqlitedict
-genshinhelper==2.1.1
+genshinhelper>=2.1.1
